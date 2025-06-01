@@ -1,6 +1,6 @@
 using System;
 
-namespace finance_api.Models;
+namespace finance_api.Dtos;
 
 public class SubCategory
 {

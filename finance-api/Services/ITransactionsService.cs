@@ -1,5 +1,5 @@
 using System;
-using finance_api.Models;
+using finance_api.Dtos;
 
 namespace finance_api.Services;
 

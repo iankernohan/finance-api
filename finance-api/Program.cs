@@ -1,5 +1,5 @@
+using finance_api.Dtos;
 using finance_api.Enums;
-using finance_api.Models;
 using finance_api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,13 +34,6 @@ if (app.Environment.IsDevelopment())
 app.UseCors(AllowedOrigins);
 
 app.UseHttpsRedirection();
-
-Category transportation = new()
-{
-    Id = 0,
-    Name = "Transportation",
-    transactionType = TransactionType.Expense,
-};
 
 app.MapGet("/getAllData", async (ITransactionsService service) =>
 {

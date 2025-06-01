@@ -29,19 +29,52 @@ public class TransactionsService : ITransactionsService
     }
     ];
 
-    public Task<List<Transaction>> GetAllTransactions()
+    private static List<Dtos.Transaction> MapTransaction(List<Transaction> transactions)
     {
-        return Task.FromResult(transactions);
-    }
-    public Task<List<Transaction>> GetAllExpenses()
-    {
-        var expenses = transactions.FindAll(t => t.Category.transactionType == TransactionType.Expense);
-        return Task.FromResult(expenses);
+        List<Dtos.Transaction> transactionsDto = [];
+        foreach (Transaction t in transactions)
+        {
+            transactionsDto.Add(new Dtos.Transaction()
+            {
+                Id = t.Id,
+                Amount = t.Amount,
+                Category = new()
+                {
+                    Id = t.Category.Id,
+                    Name = t.Category.Name,
+                    TransactionType = t.Category.transactionType.ToString(),
+                    SubCategories = t.Category.SubCategories.Select(sc => new Dtos.SubCategory()
+                    {
+                        Id = sc.Id,
+                        Name = sc.Name,
+                        CategoryId = sc.CategoryId
+                    }).ToList()
+                }
+            });
+        }
+        return transactionsDto;
     }
 
-    public Task<List<Transaction>> GetAllIncome()
+    public Task<List<Dtos.Transaction>> GetAllTransactions()
+    {
+        List<Dtos.Transaction> transactionsDto = MapTransaction(transactions);
+        return Task.FromResult(transactionsDto);
+    }
+    public Task<List<Dtos.Transaction>> GetAllExpenses()
+    {
+        var expenses = transactions.FindAll(t => t.Category.transactionType == TransactionType.Expense);
+
+        List<Dtos.Transaction> mappedExpenses = MapTransaction(expenses);
+
+        return Task.FromResult(mappedExpenses);
+    }
+
+    public Task<List<Dtos.Transaction>> GetAllIncome()
     {
         var income = transactions.FindAll(t => t.Category.transactionType == TransactionType.Income);
-        return Task.FromResult(income);
+
+        List<Dtos.Transaction> mappedIncome = MapTransaction(income);
+
+        return Task.FromResult(mappedIncome);
     }
 }
