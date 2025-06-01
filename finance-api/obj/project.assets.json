@@ -460,19 +460,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\kerno_ovn1\\.nuget\\packages\\": {}
+    "/Users/iankernohan/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\kerno_ovn1\\OneDrive\\Desktop\\finance-api\\finance-api\\finance-api.csproj",
+      "projectUniqueName": "/Users/iankernohan/Desktop/finance-api/finance-api/finance-api.csproj",
       "projectName": "finance-api",
-      "projectPath": "C:\\Users\\kerno_ovn1\\OneDrive\\Desktop\\finance-api\\finance-api\\finance-api.csproj",
-      "packagesPath": "C:\\Users\\kerno_ovn1\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\kerno_ovn1\\OneDrive\\Desktop\\finance-api\\finance-api\\obj\\",
+      "projectPath": "/Users/iankernohan/Desktop/finance-api/finance-api/finance-api.csproj",
+      "packagesPath": "/Users/iankernohan/.nuget/packages/",
+      "outputPath": "/Users/iankernohan/Desktop/finance-api/finance-api/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\kerno_ovn1\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/Users/iankernohan/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -495,7 +495,8 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      }
+      },
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -521,6 +522,20 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[8.0.16, 8.0.16]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Host.osx-arm64",
+            "version": "[8.0.16, 8.0.16]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[8.0.16, 8.0.16]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"
@@ -529,7 +544,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.203/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
