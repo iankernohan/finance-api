@@ -2,7 +2,7 @@ using System;
 
 namespace finance_api.Dtos;
 
-public class SubCategory
+public class SubCategoryDtoResponse
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;

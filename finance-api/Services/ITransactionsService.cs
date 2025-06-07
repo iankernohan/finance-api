@@ -5,7 +5,7 @@ namespace finance_api.Services;
 
 public interface ITransactionsService
 {
-    Task<List<Transaction>> GetAllTransactions();
-    Task<List<Transaction>> GetAllExpenses();
-    Task<List<Transaction>> GetAllIncome();
+    Task<List<TransactionDtoResponse>> GetAllTransactions();
+    Task<List<TransactionDtoResponse>> GetAllExpenses();
+    Task<List<TransactionDtoResponse>> GetAllIncome();
 }

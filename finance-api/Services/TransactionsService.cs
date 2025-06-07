@@ -1,80 +1,49 @@
 using System;
 using finance_api.Enums;
 using finance_api.Models;
+using finance_api.Dtos;
+using AutoMapper;
+using finance_api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace finance_api.Services;
 
 public class TransactionsService : ITransactionsService
 {
-    List<Transaction> transactions = [
-        new Transaction()
-    {
-        Id = 0,
-        Amount = 20.00,
-        Category = { Id = 0, Name = "Transportation", transactionType = TransactionType.Expense },
-        SubCategory = { Id = 0, Name = "Gas", CategoryId = 0} ,
-    },
-    new Transaction()
-    {
-        Id = 1,
-        Amount = 68.23,
-        Category = { Id = 1, Name = "Food", transactionType = TransactionType.Expense },
-        SubCategory = { Id = 1, Name = "Groceries", CategoryId = 1 },
-    },
-    new Transaction()
-    {
-        Id = 2,
-        Amount = 364.78,
-        Category = { Id = 3, Name = "Salary", transactionType = TransactionType.Income },
-    }
-    ];
+    private readonly IMapper _mapper;
+    private readonly AppDbContext _context;
 
-    private static List<Dtos.Transaction> MapTransaction(List<Transaction> transactions)
+    public TransactionsService(IMapper mapper, AppDbContext context)
     {
-        List<Dtos.Transaction> transactionsDto = [];
-        foreach (Transaction t in transactions)
-        {
-            transactionsDto.Add(new Dtos.Transaction()
-            {
-                Id = t.Id,
-                Amount = t.Amount,
-                Category = new()
-                {
-                    Id = t.Category.Id,
-                    Name = t.Category.Name,
-                    TransactionType = t.Category.transactionType.ToString(),
-                    SubCategories = t.Category.SubCategories.Select(sc => new Dtos.SubCategory()
-                    {
-                        Id = sc.Id,
-                        Name = sc.Name,
-                        CategoryId = sc.CategoryId
-                    }).ToList()
-                }
-            });
-        }
-        return transactionsDto;
+        _mapper = mapper;
+        _context = context;
     }
 
-    public Task<List<Dtos.Transaction>> GetAllTransactions()
+    public async Task<List<TransactionDtoResponse>> GetAllTransactions()
     {
-        List<Dtos.Transaction> transactionsDto = MapTransaction(transactions);
-        return Task.FromResult(transactionsDto);
+        var transactions = await _context.Transactions
+            .Select(t => _mapper.Map<TransactionDtoResponse>(t))
+            .ToListAsync();
+
+        return transactions;
     }
-    public Task<List<Dtos.Transaction>> GetAllExpenses()
+    public async Task<List<TransactionDtoResponse>> GetAllExpenses()
     {
-        var expenses = transactions.FindAll(t => t.Category.transactionType == TransactionType.Expense);
+        var expenses = await _context.Transactions
+            .Where(t => t.Category.transactionType == TransactionType.Expense)
+            .Select(t => _mapper.Map<TransactionDtoResponse>(t))
+            .ToListAsync();
 
-        List<Dtos.Transaction> mappedExpenses = MapTransaction(expenses);
-
-        return Task.FromResult(mappedExpenses);
+        return expenses;
     }
 
-    public Task<List<Dtos.Transaction>> GetAllIncome()
+    public async Task<List<TransactionDtoResponse>> GetAllIncome()
     {
-        var income = transactions.FindAll(t => t.Category.transactionType == TransactionType.Income);
+        var income = await _context.Transactions
+            .Where(t => t.Category.transactionType == TransactionType.Income)
+            .Select(t => _mapper.Map<TransactionDtoResponse>(t))
+            .ToListAsync();
 
-        List<Dtos.Transaction> mappedIncome = MapTransaction(income);
-
-        return Task.FromResult(mappedIncome);
+        return income;
     }
 }
