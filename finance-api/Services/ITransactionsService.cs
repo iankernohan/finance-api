@@ -8,4 +8,5 @@ public interface ITransactionsService
     Task<List<TransactionDtoResponse>> GetAllTransactions();
     Task<List<TransactionDtoResponse>> GetAllExpenses();
     Task<List<TransactionDtoResponse>> GetAllIncome();
+    Task AddTransaction(TransactionDtoRequest transaction);
 }

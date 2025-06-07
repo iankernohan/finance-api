@@ -30,6 +30,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddScoped<ITransactionsService, TransactionsService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 var app = builder.Build();
 
@@ -69,6 +70,30 @@ app.MapGet("/getAllIncome", async (ITransactionsService service) =>
 })
 .WithName("GetAllIncome")
 .Produces<List<TransactionDtoResponse>>()
+.WithOpenApi();
+
+app.MapPost("AddTransaction", async (ITransactionsService service, TransactionDtoRequest transaction) =>
+{
+    await service.AddTransaction(transaction);
+    return Results.Ok();
+})
+.WithName("AddCTransaction")
+.WithOpenApi();
+
+app.MapPost("AddCategory", async (ICategoryService service, CategoryDtoRequest category) =>
+{
+    await service.AddCategory(category);
+    return Results.Ok();
+})
+.WithName("AddCategory")
+.WithOpenApi();
+
+app.MapPost("AddSubCategory", async (ICategoryService service, SubCategoryDtoRequest subCategory) =>
+{
+    await service.AddSubCategory(subCategory);
+    return Results.Ok();
+})
+.WithName("AddSubCategory")
 .WithOpenApi();
 
 app.Run();

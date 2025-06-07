@@ -8,20 +8,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace finance_api.Services;
 
-public class TransactionsService : ITransactionsService
+public class TransactionsService(IMapper mapper, AppDbContext context) : ITransactionsService
 {
-    private readonly IMapper _mapper;
-    private readonly AppDbContext _context;
-
-    public TransactionsService(IMapper mapper, AppDbContext context)
-    {
-        _mapper = mapper;
-        _context = context;
-    }
+    private readonly IMapper _mapper = mapper;
+    private readonly AppDbContext _context = context;
 
     public async Task<List<TransactionDtoResponse>> GetAllTransactions()
     {
         var transactions = await _context.Transactions
+            .Include(t => t.Category)
+            .Include(t => t.SubCategory)
             .Select(t => _mapper.Map<TransactionDtoResponse>(t))
             .ToListAsync();
 
@@ -30,7 +26,7 @@ public class TransactionsService : ITransactionsService
     public async Task<List<TransactionDtoResponse>> GetAllExpenses()
     {
         var expenses = await _context.Transactions
-            .Where(t => t.Category.transactionType == TransactionType.Expense)
+            .Where(t => t.Category.TransactionType == TransactionType.Expense)
             .Select(t => _mapper.Map<TransactionDtoResponse>(t))
             .ToListAsync();
 
@@ -40,10 +36,19 @@ public class TransactionsService : ITransactionsService
     public async Task<List<TransactionDtoResponse>> GetAllIncome()
     {
         var income = await _context.Transactions
-            .Where(t => t.Category.transactionType == TransactionType.Income)
+            .Where(t => t.Category.TransactionType == TransactionType.Income)
             .Select(t => _mapper.Map<TransactionDtoResponse>(t))
             .ToListAsync();
 
         return income;
+    }
+
+    public async Task AddTransaction(TransactionDtoRequest transaction)
+    {
+        var model = _mapper.Map<Transaction>(transaction);
+        model.DateCreated = DateTime.UtcNow;
+
+        _context.Transactions.Add(model);
+        await _context.SaveChangesAsync();
     }
 }
