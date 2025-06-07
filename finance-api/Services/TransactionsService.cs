@@ -26,7 +26,7 @@ public class TransactionsService(IMapper mapper, AppDbContext context) : ITransa
     public async Task<List<TransactionDtoResponse>> GetAllExpenses()
     {
         var expenses = await _context.Transactions
-            .Where(t => t.Category.TransactionType == TransactionType.Expense)
+            .Where(t => t.Category != null && t.Category.TransactionType == TransactionType.Expense)
             .Select(t => _mapper.Map<TransactionDtoResponse>(t))
             .ToListAsync();
 
@@ -36,7 +36,7 @@ public class TransactionsService(IMapper mapper, AppDbContext context) : ITransa
     public async Task<List<TransactionDtoResponse>> GetAllIncome()
     {
         var income = await _context.Transactions
-            .Where(t => t.Category.TransactionType == TransactionType.Income)
+            .Where(t => t.Category != null && t.Category.TransactionType == TransactionType.Income)
             .Select(t => _mapper.Map<TransactionDtoResponse>(t))
             .ToListAsync();
 

@@ -12,6 +12,53 @@ public class CategoryService(IMapper mapper, AppDbContext context) : ICategorySe
     private readonly IMapper _mapper = mapper;
     private readonly AppDbContext _context = context;
 
+    public async Task<List<CategoryDtoResponse>> GetCategories()
+    {
+        var categories = await _context.Category
+            .Select(c => _mapper.Map<CategoryDtoResponse>(c))
+            .ToListAsync();
+
+        foreach (var category in categories)
+        {
+            var subcategories = await _context.SubCategory
+                .Where(s => s.CategoryId == category.Id)
+                .ToListAsync();
+            category.SubCategories = subcategories;
+        }
+
+        return categories;
+    }
+
+    public async Task<CategoryDtoResponse> GetCategory(int Id)
+    {
+        var category = await _context.Category
+            .FindAsync(Id) ?? throw new Exception($"No category found with the id of {Id}");
+
+        var model = _mapper.Map<CategoryDtoResponse>(category);
+
+        var subcategories = await _context.SubCategory
+            .Where(s => s.CategoryId == Id)
+            .ToListAsync();
+        model.SubCategories = subcategories;
+
+        return model;
+    }
+
+    public async Task<CategoryDtoResponse> GetCategory(string Name)
+    {
+        var category = await _context.Category
+            .FirstOrDefaultAsync(c => c.Name == Name) ?? throw new Exception($"No category found with the id of {Name}");
+
+        var model = _mapper.Map<CategoryDtoResponse>(category);
+
+        var subcategories = await _context.SubCategory
+            .Where(s => s.CategoryId == category.Id)
+            .ToListAsync();
+        model.SubCategories = subcategories;
+
+        return model;
+    }
+
     public async Task AddCategory(CategoryDtoRequest category)
     {
         var doesExist = await _context.Category.FirstOrDefaultAsync(c =>

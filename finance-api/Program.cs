@@ -72,12 +72,39 @@ app.MapGet("/getAllIncome", async (ITransactionsService service) =>
 .Produces<List<TransactionDtoResponse>>()
 .WithOpenApi();
 
+app.MapGet("/getAllCategories", async (ICategoryService service) =>
+{
+    var categories = await service.GetCategories();
+    return Results.Ok(categories);
+})
+.WithName("GetAllCategories")
+.Produces<List<CategoryDtoResponse>>()
+.WithOpenApi();
+
+app.MapGet("/getCategoryByName/{Name}", async (ICategoryService service, string Name) =>
+{
+    var category = await service.GetCategory(Name);
+    return Results.Ok(category);
+})
+.WithName("GetCategoryByName")
+.Produces<CategoryDtoResponse>()
+.WithOpenApi();
+
+app.MapGet("/getCategoryById/{Id}", async (ICategoryService service, int Id) =>
+{
+    var category = await service.GetCategory(Id);
+    return Results.Ok(category);
+})
+.WithName("GetCategoryById")
+.Produces<CategoryDtoResponse>()
+.WithOpenApi();
+
 app.MapPost("AddTransaction", async (ITransactionsService service, TransactionDtoRequest transaction) =>
 {
     await service.AddTransaction(transaction);
     return Results.Ok();
 })
-.WithName("AddCTransaction")
+.WithName("AddTransaction")
 .WithOpenApi();
 
 app.MapPost("AddCategory", async (ICategoryService service, CategoryDtoRequest category) =>
