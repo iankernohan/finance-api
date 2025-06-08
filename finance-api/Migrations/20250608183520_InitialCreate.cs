@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace finance_api.Migrations
 {
     /// <inheritdoc />
@@ -18,7 +20,7 @@ namespace finance_api.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    transactionType = table.Column<int>(type: "int", nullable: false)
+                    TransactionType = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -53,7 +55,7 @@ namespace finance_api.Migrations
                     Amount = table.Column<double>(type: "float", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
-                    SubCategoryId = table.Column<int>(type: "int", nullable: false)
+                    SubCategoryId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -68,8 +70,45 @@ namespace finance_api.Migrations
                         name: "FK_Transactions_SubCategory_SubCategoryId",
                         column: x => x.SubCategoryId,
                         principalTable: "SubCategory",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.InsertData(
+                table: "Category",
+                columns: new[] { "Id", "Name", "TransactionType" },
+                values: new object[,]
+                {
+                    { 1, "Bills", 0 },
+                    { 2, "Transport", 0 },
+                    { 3, "Pleasure", 0 },
+                    { 4, "Food", 0 },
+                    { 5, "Shopping", 0 },
+                    { 6, "Salary", 1 },
+                    { 7, "Investment", 1 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "SubCategory",
+                columns: new[] { "Id", "CategoryId", "Name" },
+                values: new object[,]
+                {
+                    { 1, 1, "Electricity" },
+                    { 2, 1, "Water" },
+                    { 3, 1, "Gas" },
+                    { 4, 2, "Public Transport" },
+                    { 5, 2, "Uber" },
+                    { 6, 2, "Gas" },
+                    { 7, 3, "Cinema" },
+                    { 8, 3, "Golf" },
+                    { 9, 3, "Skateboard" },
+                    { 10, 3, "Soccer" },
+                    { 11, 3, "Computer" },
+                    { 12, 3, "Concerts" },
+                    { 13, 4, "Groceries" },
+                    { 14, 4, "Dining Out" },
+                    { 15, 5, "Clothes" },
+                    { 16, 7, "Stocks" },
+                    { 17, 7, "Interest" }
                 });
 
             migrationBuilder.CreateIndex(

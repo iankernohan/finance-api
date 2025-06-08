@@ -31,6 +31,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddScoped<ITransactionsService, TransactionsService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IDatabaseService, DatabaseService>();
 
 var app = builder.Build();
 
@@ -121,6 +122,18 @@ app.MapPost("AddSubCategory", async (ICategoryService service, SubCategoryDtoReq
     return Results.Ok();
 })
 .WithName("AddSubCategory")
+.WithOpenApi();
+
+app.MapPost("resetDatabase", async (IDatabaseService service, IWebHostEnvironment env) =>
+{
+    if (!env.IsDevelopment())
+    {
+        return Results.BadRequest("Database reset is only allowed in development environment.");
+    }
+    await service.ResetDatabaseAsync();
+    return Results.Ok("Database reset successfully.");
+})
+.WithName("ResetDatabase")
 .WithOpenApi();
 
 app.Run();
