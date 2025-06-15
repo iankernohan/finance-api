@@ -19,7 +19,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: AllowedOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:5173");
+                          policy.WithOrigins("http://localhost:5173")
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
                       });
 });
 
@@ -53,6 +55,15 @@ app.MapGet("/getTransactions", async (ITransactionsService service) =>
 })
 .WithName("GetAllData")
 .Produces<List<TransactionDtoResponse>>(StatusCodes.Status200OK)
+.WithOpenApi();
+
+app.MapGet("/getTransaction", async (ITransactionsService service, int id) =>
+{
+    var transaction = await service.GetTransaction(id);
+    return Results.Ok(transaction);
+})
+.WithName("GetTransactionById")
+.Produces<TransactionDtoResponse>(StatusCodes.Status200OK)
 .WithOpenApi();
 
 app.MapGet("/getAllExpenses", async (ITransactionsService service) =>
@@ -100,15 +111,16 @@ app.MapGet("/getCategoryById/{Id}", async (ICategoryService service, int Id) =>
 .Produces<CategoryDtoResponse>()
 .WithOpenApi();
 
-app.MapPost("AddTransaction", async (ITransactionsService service, TransactionDtoRequest transaction) =>
+app.MapPost("/AddTransaction", async (ITransactionsService service, TransactionDtoRequest transaction) =>
 {
-    await service.AddTransaction(transaction);
-    return Results.Ok();
+    var addedTransaction = await service.AddTransaction(transaction);
+    return Results.Ok(addedTransaction);
 })
 .WithName("AddTransaction")
+.Produces<TransactionDtoResponse>()
 .WithOpenApi();
 
-app.MapPost("AddCategory", async (ICategoryService service, CategoryDtoRequest category) =>
+app.MapPost("/AddCategory", async (ICategoryService service, CategoryDtoRequest category) =>
 {
     await service.AddCategory(category);
     return Results.Ok();
@@ -122,6 +134,15 @@ app.MapPost("AddSubCategory", async (ICategoryService service, SubCategoryDtoReq
     return Results.Ok();
 })
 .WithName("AddSubCategory")
+.WithOpenApi();
+
+app.MapPut("/UpdateTransaction/{id}", async (ITransactionsService service, int id, TransactionDtoRequest updatedTransaction) =>
+{
+    var transaction = await service.UpdateTransaction(id, updatedTransaction);
+    return Results.Ok(transaction);
+})
+.WithName("UpdateTransaction")
+.Produces<TransactionDtoResponse>()
 .WithOpenApi();
 
 app.MapPost("resetDatabase", async (IDatabaseService service, IWebHostEnvironment env) =>

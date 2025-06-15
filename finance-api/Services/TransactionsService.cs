@@ -23,6 +23,17 @@ public class TransactionsService(IMapper mapper, AppDbContext context) : ITransa
 
         return transactions;
     }
+
+    public async Task<TransactionDtoResponse> GetTransaction(int id)
+    {
+        var transaction = await _context.Transactions
+            .Include(t => t.Category)
+            .Include(t => t.SubCategory)
+            .FirstOrDefaultAsync(t => t.Id == id);
+        var transactionDto = _mapper.Map<TransactionDtoResponse>(transaction);
+
+        return transactionDto;
+    }
     public async Task<List<TransactionDtoResponse>> GetAllExpenses()
     {
         var expenses = await _context.Transactions
@@ -43,12 +54,39 @@ public class TransactionsService(IMapper mapper, AppDbContext context) : ITransa
         return income;
     }
 
-    public async Task AddTransaction(TransactionDtoRequest transaction)
+    public async Task<TransactionDtoResponse> AddTransaction(TransactionDtoRequest transaction)
     {
-        var model = _mapper.Map<Transaction>(transaction);
-        model.DateCreated = DateTime.UtcNow;
+        try
+        {
+            var model = _mapper.Map<Transaction>(transaction);
+            model.DateCreated = DateTime.UtcNow;
 
-        _context.Transactions.Add(model);
+            var added = _context.Transactions.Add(model);
+            await _context.SaveChangesAsync();
+
+            var response = await GetTransaction(added.Entity.Id);
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
+    public async Task<TransactionDtoResponse> UpdateTransaction(int id, TransactionDtoRequest updatedtransaction)
+    {
+        var transaction = await _context.Transactions.FindAsync(id) ?? throw new Exception("No transaction found with that id.");
+
+        transaction.Amount = updatedtransaction.Amount;
+        transaction.Description = updatedtransaction.Description;
+        if (updatedtransaction.DateCreated is not null) transaction.DateCreated = (DateTime)updatedtransaction.DateCreated;
+        transaction.CategoryId = updatedtransaction.CategoryId;
+        transaction.SubCategoryId = updatedtransaction.SubCategoryId;
+
         await _context.SaveChangesAsync();
+        var updated = await GetTransaction(id);
+
+        return _mapper.Map<TransactionDtoResponse>(updated);
     }
 }
