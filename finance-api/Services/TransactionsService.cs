@@ -5,6 +5,7 @@ using finance_api.Dtos;
 using AutoMapper;
 using finance_api.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace finance_api.Services;
 
@@ -88,5 +89,20 @@ public class TransactionsService(IMapper mapper, AppDbContext context) : ITransa
         var updated = await GetTransaction(id);
 
         return _mapper.Map<TransactionDtoResponse>(updated);
+    }
+
+    public async Task<TransactionDtoResponse?> DeleteTransaction(int id)
+    {
+        var transaction = await _context.Transactions.FindAsync(id);
+
+        if (transaction is not null)
+        {
+            _context.Transactions.Remove(transaction);
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<TransactionDtoResponse>(transaction);
+        }
+
+        return null;
     }
 }

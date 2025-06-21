@@ -12,4 +12,5 @@ public interface ITransactionsService
     Task<List<TransactionDtoResponse>> GetAllIncome();
     Task<TransactionDtoResponse> AddTransaction(TransactionDtoRequest transaction);
     Task<TransactionDtoResponse> UpdateTransaction(int id, TransactionDtoRequest updatedtransaction);
+    Task<TransactionDtoResponse?> DeleteTransaction(int id);
 }

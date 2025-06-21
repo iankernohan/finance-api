@@ -145,6 +145,18 @@ app.MapPut("/UpdateTransaction/{id}", async (ITransactionsService service, int i
 .Produces<TransactionDtoResponse>()
 .WithOpenApi();
 
+app.MapDelete("/DeleteTransaction/{id}", async (ITransactionsService service, int id) =>
+{
+    var transaction = await service.DeleteTransaction(id);
+    if (transaction is not null)
+    {
+        return Results.Ok(transaction);
+    }
+    return Results.NotFound($"No transaction found with the id {id}");
+})
+.WithName("DeleteTransaction")
+.WithOpenApi();
+
 app.MapPost("resetDatabase", async (IDatabaseService service, IWebHostEnvironment env) =>
 {
     if (!env.IsDevelopment())
