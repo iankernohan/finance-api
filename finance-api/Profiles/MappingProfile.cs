@@ -15,5 +15,7 @@ public class MappingProfile : Profile
         CreateMap<Category, CategoryDtoRequest>().ReverseMap();
         CreateMap<SubCategory, SubCategoryDtoResponse>().ReverseMap();
         CreateMap<SubCategory, SubCategoryDtoRequest>().ReverseMap();
+        CreateMap<Budget, BudgetDtoRequest>().ReverseMap();
+        CreateMap<Budget, BudgetDtoResponse>().ReverseMap();
     }
 }

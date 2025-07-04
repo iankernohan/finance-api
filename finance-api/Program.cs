@@ -34,6 +34,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<ITransactionsService, TransactionsService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IDatabaseService, DatabaseService>();
+builder.Services.AddScoped<IBudgetService, BudgetService>();
 
 var app = builder.Build();
 
@@ -157,6 +158,23 @@ app.MapDelete("/DeleteTransaction/{id}", async (ITransactionsService service, in
 .WithName("DeleteTransaction")
 .WithOpenApi();
 
+app.MapPost("AddBudget", async (IBudgetService service, BudgetDtoRequest budget) =>
+{
+    await service.AddBudget(budget);
+    return Results.Ok();
+})
+.WithName("AddBudget")
+.WithOpenApi();
+
+app.MapGet("GetAllBudgets", async (IBudgetService service) =>
+{
+    var budgets = await service.GetAllBudgets();
+    return Results.Ok(budgets);
+})
+.WithName("GetAllBudgets")
+.Produces<BudgetDtoResponse>()
+.WithOpenApi();
+
 app.MapPost("resetDatabase", async (IDatabaseService service, IWebHostEnvironment env) =>
 {
     if (!env.IsDevelopment())
@@ -168,5 +186,4 @@ app.MapPost("resetDatabase", async (IDatabaseService service, IWebHostEnvironmen
 })
 .WithName("ResetDatabase")
 .WithOpenApi();
-
 app.Run();

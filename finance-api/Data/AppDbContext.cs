@@ -10,6 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Category> Category { get; set; }
     public DbSet<SubCategory> SubCategory { get; set; }
+    public DbSet<Budget> Budgets { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
