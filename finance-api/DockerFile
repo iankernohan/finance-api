@@ -1,13 +1,17 @@
-    FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-    WORKDIR /src
-    COPY finance-api.sln ./
-    COPY finance-api/*.csproj ./finance-api/
-    RUN dotnet restore finance-api.finance-api.csproj
-    COPY finance-api/ ./finance-api/
-    RUN dotnet publish finance-api/finance-api.csproj -c Release -o /app
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 80
 
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY . .
+RUN dotnet restore "finance-api.sln"
+RUN dotnet build "finance-api.sln" -c Release -o /app/build
 
-    FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-    WORKDIR /app
-    COPY --from=build /app .
-    ENTRYPOINT ["dotnet", "finance-api.dll"]
+FROM build AS publish
+RUN dotnet publish "finance-api.sln" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "finance-api.dll"]
