@@ -2,9 +2,9 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using finance_api.Data;
 
 #nullable disable
@@ -12,8 +12,8 @@ using finance_api.Data;
 namespace finance_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250615130056_AddedDescription")]
-    partial class AddedDescription
+    [Migration("20250823204215_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,24 +21,45 @@ namespace finance_api.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "9.0.5")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("finance_api.Models.Budget", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<int>("categoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("limit")
+                        .HasColumnType("integer");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("categoryId");
+
+                    b.ToTable("Budgets");
+                });
 
             modelBuilder.Entity("finance_api.Models.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("TransactionType")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -86,6 +107,12 @@ namespace finance_api.Migrations
                             Id = 7,
                             Name = "Investment",
                             TransactionType = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Name = "Pets",
+                            TransactionType = 0
                         });
                 });
 
@@ -93,16 +120,16 @@ namespace finance_api.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("CategoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -212,6 +239,30 @@ namespace finance_api.Migrations
                             Id = 17,
                             CategoryId = 7,
                             Name = "Interest"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            CategoryId = 8,
+                            Name = "Food"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            CategoryId = 8,
+                            Name = "Toys"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            CategoryId = 8,
+                            Name = "Litter"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            CategoryId = 8,
+                            Name = "Vet"
                         });
                 });
 
@@ -219,24 +270,24 @@ namespace finance_api.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<double>("Amount")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("SubCategoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -245,6 +296,17 @@ namespace finance_api.Migrations
                     b.HasIndex("SubCategoryId");
 
                     b.ToTable("Transactions");
+                });
+
+            modelBuilder.Entity("finance_api.Models.Budget", b =>
+                {
+                    b.HasOne("finance_api.Models.Category", "category")
+                        .WithMany()
+                        .HasForeignKey("categoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("category");
                 });
 
             modelBuilder.Entity("finance_api.Models.SubCategory", b =>

@@ -4,6 +4,7 @@ using finance_api.Enums;
 using finance_api.Profiles;
 using finance_api.Services;
 using Microsoft.EntityFrameworkCore;
+using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,8 +26,11 @@ builder.Services.AddCors(options =>
                       });
 });
 
+Env.Load();
+string ConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") ?? "";
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString"))
+    options.UseNpgsql(ConnectionString)
     );
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));

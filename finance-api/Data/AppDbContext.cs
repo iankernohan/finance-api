@@ -24,7 +24,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             new Category { Id = 4, Name = "Food", TransactionType = TransactionType.Expense },
             new Category { Id = 5, Name = "Shopping", TransactionType = TransactionType.Expense },
             new Category { Id = 6, Name = "Salary", TransactionType = TransactionType.Income },
-            new Category { Id = 7, Name = "Investment", TransactionType = TransactionType.Income }
+            new Category { Id = 7, Name = "Investment", TransactionType = TransactionType.Income },
+            new Category { Id = 8, Name = "Pets", TransactionType = TransactionType.Expense }
         );
 
         modelBuilder.Entity<SubCategory>()
@@ -45,7 +46,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             new SubCategory { Id = 14, Name = "Dining Out", CategoryId = 4 },
             new SubCategory { Id = 15, Name = "Clothes", CategoryId = 5 },
             new SubCategory { Id = 16, Name = "Stocks", CategoryId = 7 },
-            new SubCategory { Id = 17, Name = "Interest", CategoryId = 7 }
+            new SubCategory { Id = 17, Name = "Interest", CategoryId = 7 },
+            new SubCategory { Id = 18, Name = "Food", CategoryId = 8 },
+            new SubCategory { Id = 19, Name = "Toys", CategoryId = 8 },
+            new SubCategory { Id = 20, Name = "Litter", CategoryId = 8 },
+            new SubCategory { Id = 21, Name = "Vet", CategoryId = 8 }
         );
     }
 }
