@@ -1,6 +1,5 @@
 using finance_api.Data;
 using finance_api.Dtos;
-using finance_api.Enums;
 using finance_api.Profiles;
 using finance_api.Services;
 using Microsoft.EntityFrameworkCore;
