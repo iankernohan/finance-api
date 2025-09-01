@@ -5,7 +5,7 @@ using finance_api.Dtos;
 using AutoMapper;
 using finance_api.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 
 namespace finance_api.Services;
 
@@ -104,5 +104,100 @@ public class TransactionsService(IMapper mapper, AppDbContext context) : ITransa
         }
 
         return null;
+    }
+
+    public async Task<IActionResult> AddRecurringTransaction(RecurringTransactionRequest request)
+    {
+        try
+        {
+            var model = _mapper.Map<RecurringTransactions>(request);
+
+            _context.RecurringTransactions.Add(model);
+            await _context.SaveChangesAsync();
+
+            await ProcessRecurringTransactions();
+
+            return new OkObjectResult("Recurring transaction added successfully.");
+        }
+        catch (Exception ex)
+        {
+            return new BadRequestObjectResult($"Error adding recurring transaction: {ex.Message}");
+        }
+    }
+
+    public async Task<List<RecurringTransactionResponse>> GetAllRecurringTransactions()
+    {
+        var recurringTransactions = await _context.RecurringTransactions
+            .Select(rt => _mapper.Map<RecurringTransactionResponse>(rt))
+            .ToListAsync();
+
+        return recurringTransactions;
+    }
+
+    public async Task<RecurringTransactionResponse?> DeleteRecurringTransaction(int id)
+    {
+        var recurringTransaction = await _context.RecurringTransactions.FindAsync(id);
+
+        if (recurringTransaction is not null)
+        {
+            _context.RecurringTransactions.Remove(recurringTransaction);
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<RecurringTransactionResponse>(recurringTransaction);
+        }
+
+        return null;
+    }
+
+    public async Task<RecurringTransactionResponse?> UpdateRecurringTransaction(int id, RecurringTransactionUpdateRequest updatedTransaction)
+    {
+        var recurringTransaction = await _context.RecurringTransactions.FindAsync(id) ?? throw new Exception("No recurring transaction found with that id.");
+
+        recurringTransaction.Amount = updatedTransaction.Amount ?? recurringTransaction.Amount;
+        recurringTransaction.Description = updatedTransaction.Description ?? recurringTransaction.Description;
+        recurringTransaction.EndDate = updatedTransaction.EndDate ?? recurringTransaction.EndDate;
+        recurringTransaction.IntervalDays = updatedTransaction.IntervalDays ?? recurringTransaction.IntervalDays;
+
+        await _context.SaveChangesAsync();
+        var updated = await GetAllRecurringTransactions();
+
+        return _mapper.Map<RecurringTransactionResponse>(updated.FirstOrDefault(rt => rt.Id == id));
+    }
+
+    public async Task ProcessRecurringTransactions()
+    {
+        var today = DateTime.UtcNow.Date;
+        var recurringTransactions = await _context.RecurringTransactions.ToListAsync();
+
+        foreach (var rt in recurringTransactions)
+        {
+            if (rt.StartDate.Date > today) continue;
+            if (rt.EndDate.HasValue && rt.EndDate.Value.Date < today) continue;
+
+            var lastTransaction = await _context.Transactions
+                .Where(t => t.Description == rt.Description && t.Amount == rt.Amount && t.CategoryId == rt.CategoryId && t.SubCategoryId == rt.SubCategoryId)
+                .OrderByDescending(t => t.DateCreated)
+                .FirstOrDefaultAsync();
+
+            var nextDate = lastTransaction?.DateCreated.AddDays(rt.IntervalDays) ?? rt.StartDate;
+
+            while (nextDate.Date <= today)
+            {
+                var newTransaction = new Transaction
+                {
+                    Amount = rt.Amount,
+                    DateCreated = nextDate,
+                    Description = rt.Description,
+                    IsRecurring = true,
+                    CategoryId = rt.CategoryId,
+                    SubCategoryId = rt.SubCategoryId
+                };
+
+                _context.Transactions.Add(newTransaction);
+                nextDate = nextDate.AddDays(rt.IntervalDays);
+            }
+        }
+
+        await _context.SaveChangesAsync();
     }
 }

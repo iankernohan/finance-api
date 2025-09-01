@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Category> Category { get; set; }
     public DbSet<SubCategory> SubCategory { get; set; }
     public DbSet<Budget> Budgets { get; set; }
+    public DbSet<RecurringTransactions> RecurringTransactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

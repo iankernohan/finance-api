@@ -1,6 +1,7 @@
 using System;
 using finance_api.Dtos;
 using finance_api.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace finance_api.Services;
 
@@ -13,4 +14,9 @@ public interface ITransactionsService
     Task<TransactionDtoResponse> AddTransaction(TransactionDtoRequest transaction);
     Task<TransactionDtoResponse> UpdateTransaction(int id, TransactionDtoRequest updatedtransaction);
     Task<TransactionDtoResponse?> DeleteTransaction(int id);
+    Task<IActionResult> AddRecurringTransaction(RecurringTransactionRequest request);
+    Task<List<RecurringTransactionResponse>> GetAllRecurringTransactions();
+    Task<RecurringTransactionResponse?> DeleteRecurringTransaction(int id);
+    Task<RecurringTransactionResponse?> UpdateRecurringTransaction(int id, RecurringTransactionUpdateRequest updatedTransaction);
+    Task ProcessRecurringTransactions();
 }

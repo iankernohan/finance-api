@@ -23,12 +23,20 @@ builder.Services.AddCors(options =>
                       });
 });
 
-Env.Load();
-string ConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") ?? "";
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(ConnectionString)
-    );
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString"))
+        );
+}
+else
+{
+    Env.Load();
+    string ConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") ?? "";
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseNpgsql(ConnectionString)
+        );
+}
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
@@ -187,4 +195,58 @@ app.MapPost("resetDatabase", async (IDatabaseService service, IWebHostEnvironmen
 })
 .WithName("ResetDatabase")
 .WithOpenApi();
+
+app.MapPost("AddRecurringTransaction", async (ITransactionsService service, RecurringTransactionRequest request) =>
+{
+    var result = await service.AddRecurringTransaction(request);
+    return Results.Ok(result);
+})
+.WithName("AddRecurringTransaction")
+.WithOpenApi();
+
+app.MapGet("GetAllRecurringTransactions", async (ITransactionsService service) =>
+{
+    var transactions = await service.GetAllRecurringTransactions();
+    return Results.Ok(transactions);
+})
+.WithName("GetAllRecurringTransactions")
+.Produces<List<RecurringTransactionResponse>>()
+.WithOpenApi();
+
+app.MapDelete("DeleteRecurringTransaction/{id}", async (ITransactionsService service, int id) =>
+{
+    var transaction = await service.DeleteRecurringTransaction(id);
+    if (transaction is not null)
+    {
+        return Results.Ok(transaction);
+    }
+    return Results.NotFound($"No recurring transaction found with the id {id}");
+})
+.WithName("DeleteRecurringTransaction")
+.WithOpenApi();
+
+app.MapPut("UpdateRecurringTransaction/{id}", async (ITransactionsService service, int id, RecurringTransactionUpdateRequest updatedTransaction) =>
+{
+    try
+    {
+        var transaction = await service.UpdateRecurringTransaction(id, updatedTransaction);
+        return Results.Ok(transaction);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.Message);
+    }
+})
+.WithName("UpdateRecurringTransaction")
+.Produces<RecurringTransactionResponse>()
+.WithOpenApi();
+
+app.MapPost("ProcessRecurringTransactions", async (ITransactionsService service) =>
+{
+    await service.ProcessRecurringTransactions();
+    return Results.Ok("Processed recurring transactions.");
+})
+.WithName("ProcessRecurringTransactions")
+.WithOpenApi();
+
 app.Run();

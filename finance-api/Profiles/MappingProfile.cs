@@ -17,5 +17,7 @@ public class MappingProfile : Profile
         CreateMap<SubCategory, SubCategoryDtoRequest>().ReverseMap();
         CreateMap<Budget, BudgetDtoRequest>().ReverseMap();
         CreateMap<Budget, BudgetDtoResponse>().ReverseMap();
+        CreateMap<RecurringTransactions, RecurringTransactionResponse>().ReverseMap();
+        CreateMap<RecurringTransactions, RecurringTransactionRequest>().ReverseMap();
     }
 }
