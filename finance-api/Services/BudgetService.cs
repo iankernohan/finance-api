@@ -26,4 +26,17 @@ public class BudgetService(AppDbContext context, IMapper mapper) : IBudgetServic
 
         return allBudgets;
     }
+
+    public async Task<BudgetDtoResponse> UpdateBudget(UpdateBudgetRequest budget)
+    {
+        var current = await _context.Budgets.FindAsync(budget.id) ?? throw new Exception("No budget found with that id.");
+
+        current.limit = budget.limit;
+
+        await _context.SaveChangesAsync();
+
+        var updated = await _context.Budgets.Include(b => b.category).FirstOrDefaultAsync(b => b.id == budget.id);
+
+        return  _mapper.Map<BudgetDtoResponse>(updated);
+    }
 }

@@ -7,4 +7,5 @@ public interface IBudgetService
 {
     Task AddBudget(BudgetDtoRequest budget);
     Task<List<BudgetDtoResponse>> GetAllBudgets();
+    Task<BudgetDtoResponse> UpdateBudget(UpdateBudgetRequest budget);
 }

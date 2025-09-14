@@ -175,6 +175,15 @@ app.MapPost("AddBudget", async (IBudgetService service, BudgetDtoRequest budget)
 .WithName("AddBudget")
 .WithOpenApi();
 
+app.MapPut("UpdateBudget", async (IBudgetService service, UpdateBudgetRequest budget) =>
+{
+    var updated = await service.UpdateBudget(budget);
+    return Results.Ok(updated);
+})
+.WithName("UpdateBudget")
+.Produces<BudgetDtoResponse>()
+.WithOpenApi();
+
 app.MapGet("GetAllBudgets", async (IBudgetService service) =>
 {
     var budgets = await service.GetAllBudgets();

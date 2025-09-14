@@ -19,6 +19,7 @@ public class TransactionsService(IMapper mapper, AppDbContext context) : ITransa
         var transactions = await _context.Transactions
             .Include(t => t.Category)
             .Include(t => t.SubCategory)
+            .OrderBy(t => t.DateCreated)
             .Select(t => _mapper.Map<TransactionDtoResponse>(t))
             .ToListAsync();
 
