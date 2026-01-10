@@ -1,6 +1,7 @@
 using System;
 using finance_api.Enums;
 using finance_api.Models;
+using finance_api.Plaid;
 using Microsoft.EntityFrameworkCore;
 
 namespace finance_api.Data;
@@ -12,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<SubCategory> SubCategory { get; set; }
     public DbSet<Budget> Budgets { get; set; }
     public DbSet<RecurringTransactions> RecurringTransactions { get; set; }
+    public DbSet<PlaidItem> PlaidItems => Set<PlaidItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -4,6 +4,9 @@ using finance_api.Profiles;
 using finance_api.Services;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
+using Going.Plaid;
+using finance_api.Plaid;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,11 +35,15 @@ if (builder.Environment.IsDevelopment())
 else
 {
     Env.Load();
-    string ConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") ?? "";
+    string ConnectionString = System.Environment.GetEnvironmentVariable("CONNECTION_STRING") ?? "";
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(ConnectionString)
         );
 }
+
+builder.Services.Configure<PlaidOptions>(
+    builder.Configuration.GetSection("Plaid"));
+builder.Services.AddSingleton<PlaidClient>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
@@ -44,6 +51,7 @@ builder.Services.AddScoped<ITransactionsService, TransactionsService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IDatabaseService, DatabaseService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
+builder.Services.AddScoped<IPlaidService, PlaidService>();
 
 var app = builder.Build();
 
@@ -257,5 +265,64 @@ app.MapPost("ProcessRecurringTransactions", async (ITransactionsService service)
 })
 .WithName("ProcessRecurringTransactions")
 .WithOpenApi();
+
+app.MapPost("/plaid/create_link_token", async (
+    CreateLinkTokenRequest req,
+    PlaidClient plaid,
+    IPlaidService service) =>
+{
+    var LinkToken = await service.CreateLinkToken(plaid, req);
+
+    return Results.Ok(new { link_token = LinkToken });
+});
+
+app.MapPost("/plaid/exchange_public_token", async (
+    ExchangePublicTokenRequest req,
+    PlaidClient plaid,
+    IPlaidService service) =>
+{
+    var exchange = await service.ExchangePublicToken(plaid, req);
+
+    var item = new PlaidItem
+    {
+        UserId = req.UserId,
+        ItemId = exchange.ItemId,
+        AccessToken = exchange.AccessToken
+    };
+
+    await service.AddPlaidItem(item);
+
+    return Results.Ok(new { itemId = exchange.ItemId });
+});
+
+app.MapGet("/plaid/accounts/{userId}", async (
+    string userId,
+    PlaidClient plaid,
+    IPlaidService service) =>
+{
+    var item = await service.GetPlaidItem(userId);
+
+    if (item == null)
+        return Results.NotFound("No Plaid item found");
+
+    var accounts = await service.GetAccounts(userId, plaid, item);
+
+    return Results.Ok(accounts);
+});
+
+app.MapGet("/plaid/transactions/{userId}", async (
+    string userId,
+    PlaidClient plaid,
+    IPlaidService service) =>
+{
+    var item = await service.GetPlaidItem(userId);
+
+    if (item == null)
+        return Results.NotFound("No Plaid item found");
+
+    var data = service.GetPlaidTransactions(plaid, item);
+
+    return Results.Ok(data);
+});
 
 app.Run();
