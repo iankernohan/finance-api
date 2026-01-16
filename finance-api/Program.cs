@@ -7,6 +7,7 @@ using DotNetEnv;
 using Going.Plaid;
 using finance_api.Plaid;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,7 @@ builder.Services.AddCors(options =>
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString"))
+        options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServerConnection"))
         );
 }
 else
@@ -310,19 +311,48 @@ app.MapGet("/plaid/accounts/{userId}", async (
     return Results.Ok(accounts);
 });
 
-app.MapGet("/plaid/transactions/{userId}", async (
-    string userId,
+app.MapPost("/plaid/transactions", async (
+    GetPlaidTransactionsRequest req,
     PlaidClient plaid,
     IPlaidService service) =>
 {
-    var item = await service.GetPlaidItem(userId);
+    var item = await service.GetPlaidItem(req.UserId);
 
     if (item == null)
         return Results.NotFound("No Plaid item found");
 
-    var data = service.GetPlaidTransactions(plaid, item);
+    var data = await service.GetPlaidTransactions(plaid, item, req);
 
     return Results.Ok(data);
+});
+
+app.MapPost("/plaid/uncategorizedTransactions", async (
+    GetPlaidTransactionsRequest req,
+    PlaidClient plaid,
+    IPlaidService service) =>
+{
+    var transactions = await service.GetUncategorizedTransactions(req.UserId);
+
+    return Results.Ok(transactions);
+});
+
+app.MapPost("/plaid/CategorizedTransactions", async (
+    GetPlaidTransactionsRequest req,
+    PlaidClient plaid,
+    IPlaidService service) =>
+{
+    var transactions = await service.GetCategorizedTransactions(req.UserId);
+
+    return Results.Ok(transactions);
+});
+
+app.MapPost("/plaid/TransactionsByCategory", async (
+    TransactionsByCategoryRequest req,
+    IPlaidService service) =>
+{
+    var transactions = await service.GetTransactionsByCategory(req.UserId, req.CategoryNames);
+
+    return Results.Ok(transactions);
 });
 
 app.Run();

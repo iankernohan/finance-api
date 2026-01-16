@@ -14,10 +14,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Budget> Budgets { get; set; }
     public DbSet<RecurringTransactions> RecurringTransactions { get; set; }
     public DbSet<PlaidItem> PlaidItems => Set<PlaidItem>();
+    public DbSet<PlaidTransaction> PlaidTransactions=> Set<PlaidTransaction>(); 
+    public DbSet<CategoryRules> CategoryRules => Set<CategoryRules>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<PlaidTransaction>().OwnsOne(p => p.PlaidCategory);
+        modelBuilder.Entity<PlaidTransaction>().OwnsOne(p => p.Location);
 
         modelBuilder.Entity<Category>()
         .HasData(
@@ -28,7 +33,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             new Category { Id = 5, Name = "Shopping", TransactionType = TransactionType.Expense },
             new Category { Id = 6, Name = "Salary", TransactionType = TransactionType.Income },
             new Category { Id = 7, Name = "Investment", TransactionType = TransactionType.Income },
-            new Category { Id = 8, Name = "Pets", TransactionType = TransactionType.Expense }
+            new Category { Id = 8, Name = "Pets", TransactionType = TransactionType.Expense },
+            new Category { Id = 9, Name = "Healthcare", TransactionType = TransactionType.Expense }
+        );
+
+        modelBuilder.Entity<CategoryRules>()
+        .HasData(
+            new CategoryRules { Id = 1, Name = "Taco Bell", CategoryId = 4 },
+            new CategoryRules { Id = 2, Name = "DEPOSIT ACH UNITED WHOLESALE TYPE: PAYROLL ID: 9990001601 CO: UNITED WHOLESALE ENTRY CLASS CODE: PPD ACH NUMBER: 021000026452044", CategoryId = 6 },
+            new CategoryRules { Id = 3, Name = "Acorns", CategoryId = 7 },
+            new CategoryRules { Id = 4, Name = "Royal Oak Family Dentistry", CategoryId =  9},
+            new CategoryRules { Id = 5, Name = "Trader Joe's", CategoryId =  4},
+            new CategoryRules { Id = 6, Name = "DTE Energy", CategoryId =  1}
         );
 
         modelBuilder.Entity<SubCategory>()

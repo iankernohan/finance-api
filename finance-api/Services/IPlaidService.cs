@@ -16,5 +16,11 @@ public interface IPlaidService
 
     Task AddPlaidItem(PlaidItem item);
 
-    Task<IReadOnlyList<Going.Plaid.Entity.Transaction>?> GetPlaidTransactions(PlaidClient plaid, PlaidItem item);
+    Task<List<PlaidTransaction>> GetPlaidTransactions(PlaidClient plaid, PlaidItem item, GetPlaidTransactionsRequest req);
+
+    Task<List<PlaidTransaction>> GetUncategorizedTransactions(string userId);
+
+    Task<List<PlaidTransaction>> GetCategorizedTransactions(string userId);
+
+    Task<Dictionary<string, List<PlaidTransaction>>> GetTransactionsByCategory(string userId, List<string>? categoryNames);
 }
