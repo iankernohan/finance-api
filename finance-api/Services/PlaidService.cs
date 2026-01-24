@@ -134,7 +134,7 @@ public class PlaidService : IPlaidService
         return transactions;
     }
 
-    public async Task<Dictionary<string, List<PlaidTransaction>>> GetTransactionsByCategory(string userId, List<string>? categoryNames)
+    public async Task<Dictionary<string, List<PlaidTransaction>>> GetTransactionsByCategory(List<string>? categoryNames)
     {
         List<string> categories;
 
@@ -217,7 +217,9 @@ public class PlaidService : IPlaidService
         var categoryRules = await _context.CategoryRules.ToListAsync();
         foreach (var t in transactions)
         {
-            var name = t.MerchantName.IsNullOrEmpty() ? t.Name : t.MerchantName;
+            var name = String.IsNullOrEmpty(t.MerchantName
+
+            ) ? t.Name : t.MerchantName;
             var rule = categoryRules.FirstOrDefault(x => x.Name == name);
             if (rule is not null)
             {

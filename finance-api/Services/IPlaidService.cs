@@ -22,5 +22,5 @@ public interface IPlaidService
 
     Task<List<PlaidTransaction>> GetCategorizedTransactions(string userId);
 
-    Task<Dictionary<string, List<PlaidTransaction>>> GetTransactionsByCategory(string userId, List<string>? categoryNames);
+    Task<Dictionary<string, List<PlaidTransaction>>> GetTransactionsByCategory(List<string>? categoryNames);
 }
