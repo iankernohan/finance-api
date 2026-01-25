@@ -11,13 +11,15 @@ namespace finance_api.Services;
 public class PlaidService : IPlaidService
 {
     private readonly AppDbContext _context;
+    private readonly PlaidClient _plaid;
 
-    public PlaidService(AppDbContext context)
+    public PlaidService(AppDbContext context, PlaidClient plaid)
     {
         _context = context;
+        _plaid = plaid;
     }
 
-    public async Task<string> CreateLinkToken(PlaidClient plaid, CreateLinkTokenRequest req)
+    public async Task<string> CreateLinkToken(CreateLinkTokenRequest req)
     {
         var request = new Going.Plaid.Link.LinkTokenCreateRequest
         {
@@ -28,14 +30,14 @@ public class PlaidService : IPlaidService
             Products = new[] { Going.Plaid.Entity.Products.Transactions }
         };
 
-        var response = await plaid.LinkTokenCreateAsync(request);
+        var response = await _plaid.LinkTokenCreateAsync(request);
 
         return response.LinkToken;
     }
 
-    public async Task<Going.Plaid.Item.ItemPublicTokenExchangeResponse> ExchangePublicToken(PlaidClient plaid, ExchangePublicTokenRequest req)
+    public async Task<Going.Plaid.Item.ItemPublicTokenExchangeResponse> ExchangePublicToken(ExchangePublicTokenRequest req)
     {
-        var exchange = await plaid.ItemPublicTokenExchangeAsync(
+        var exchange = await _plaid.ItemPublicTokenExchangeAsync(
         new Going.Plaid.Item.ItemPublicTokenExchangeRequest
         {
             PublicToken = req.PublicToken
@@ -50,9 +52,9 @@ public class PlaidService : IPlaidService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IReadOnlyList<Going.Plaid.Entity.Account>> GetAccounts(string userId, PlaidClient plaid, PlaidItem item)
+    public async Task<IReadOnlyList<Going.Plaid.Entity.Account>> GetAccounts(string userId, PlaidItem item)
     {
-        var response = await plaid.AccountsGetAsync(
+        var response = await _plaid.AccountsGetAsync(
         new Going.Plaid.Accounts.AccountsGetRequest
         {
             AccessToken = item.AccessToken
@@ -70,7 +72,7 @@ public class PlaidService : IPlaidService
         return item;
     }
 
-    public async Task<List<PlaidTransaction>> GetPlaidTransactions(PlaidClient plaid, PlaidItem item, GetPlaidTransactionsRequest req)
+    public async Task<List<PlaidTransaction>> GetPlaidTransactions(PlaidItem item, GetPlaidTransactionsRequest req)
     {
         var numberOfTransactions = req.Page * req.PageSize;
 
@@ -95,7 +97,7 @@ public class PlaidService : IPlaidService
         //         EndDate = DateOnly.FromDateTime(DateTime.UtcNow)
         //     };
 
-        //     var response = await plaid.TransactionsGetAsync(request);
+        //     var response = await _plaid.TransactionsGetAsync(request);
 
         //     // Filter only new transactions
         //     var newTransactions = response.Transactions.ToList();

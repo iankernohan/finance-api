@@ -6,17 +6,17 @@ namespace finance_api.Services;
 
 public interface IPlaidService
 {
-    Task<string> CreateLinkToken(PlaidClient plaid, CreateLinkTokenRequest req);
+    Task<string> CreateLinkToken(CreateLinkTokenRequest req);
 
-    Task<Going.Plaid.Item.ItemPublicTokenExchangeResponse> ExchangePublicToken(PlaidClient plaid, ExchangePublicTokenRequest req);
+    Task<Going.Plaid.Item.ItemPublicTokenExchangeResponse> ExchangePublicToken(ExchangePublicTokenRequest req);
 
     Task<PlaidItem?> GetPlaidItem(string userId);
 
-    Task<IReadOnlyList<Going.Plaid.Entity.Account>> GetAccounts(string userId, PlaidClient plaidClient, PlaidItem item);
+    Task<IReadOnlyList<Going.Plaid.Entity.Account>> GetAccounts(string userId, PlaidItem item);
 
     Task AddPlaidItem(PlaidItem item);
 
-    Task<List<PlaidTransaction>> GetPlaidTransactions(PlaidClient plaid, PlaidItem item, GetPlaidTransactionsRequest req);
+    Task<List<PlaidTransaction>> GetPlaidTransactions(PlaidItem item, GetPlaidTransactionsRequest req);
 
     Task<List<PlaidTransaction>> GetUncategorizedTransactions(string userId);
 

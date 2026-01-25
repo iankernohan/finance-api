@@ -12,6 +12,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -32,7 +33,7 @@ builder.Services.AddCors(options =>
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString"))
+        options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServerConnection"))
         );
 }
 else
@@ -84,14 +85,13 @@ app.UseCors(AllowedOrigins);
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-
+app.MapControllers();
 
 app.MapGet("/getTransactions", async (ITransactionsService service) =>
 {
@@ -292,97 +292,5 @@ app.MapPost("ProcessRecurringTransactions", async (ITransactionsService service)
 })
 .WithName("ProcessRecurringTransactions")
 .WithOpenApi();
-
-app.MapPost("/plaid/create_link_token", async (
-    CreateLinkTokenRequest req,
-    PlaidClient plaid,
-    IPlaidService service) =>
-{
-    var LinkToken = await service.CreateLinkToken(plaid, req);
-
-    return Results.Ok(new { link_token = LinkToken });
-});
-
-app.MapPost("/plaid/exchange_public_token", async (
-    ExchangePublicTokenRequest req,
-    PlaidClient plaid,
-    IPlaidService service) =>
-{
-    var exchange = await service.ExchangePublicToken(plaid, req);
-
-    var item = new PlaidItem
-    {
-        UserId = req.UserId,
-        ItemId = exchange.ItemId,
-        AccessToken = exchange.AccessToken
-    };
-
-    await service.AddPlaidItem(item);
-
-    return Results.Ok(new { itemId = exchange.ItemId });
-});
-
-app.MapGet("/plaid/accounts/{userId}", async (
-    string userId,
-    PlaidClient plaid,
-    IPlaidService service) =>
-{
-    var item = await service.GetPlaidItem(userId);
-
-    if (item == null)
-        return Results.NotFound("No Plaid item found");
-
-    var accounts = await service.GetAccounts(userId, plaid, item);
-
-    return Results.Ok(accounts);
-});
-
-app.MapPost("/plaid/transactions", async (
-    GetPlaidTransactionsRequest req,
-    PlaidClient plaid,
-    IPlaidService service) =>
-{
-    var item = await service.GetPlaidItem(req.UserId);
-
-    if (item == null)
-        return Results.NotFound("No Plaid item found");
-
-    var data = await service.GetPlaidTransactions(plaid, item, req);
-
-    return Results.Ok(data);
-});
-
-app.MapPost("/plaid/uncategorizedTransactions", async (
-    GetPlaidTransactionsRequest req,
-    PlaidClient plaid,
-    IPlaidService service) =>
-{
-    var transactions = await service.GetUncategorizedTransactions(req.UserId);
-
-    return Results.Ok(transactions);
-});
-
-app.MapPost("/plaid/CategorizedTransactions", async (
-    GetPlaidTransactionsRequest req,
-    PlaidClient plaid,
-    IPlaidService service) =>
-{
-    var transactions = await service.GetCategorizedTransactions(req.UserId);
-
-    return Results.Ok(transactions);
-});
-
-app.MapPost("/plaid/TransactionsByCategory", async (
-    HttpContext context,
-    TransactionsByCategoryRequest req,
-    IPlaidService service) =>
-{
-    var userId = context.User.FindFirst("sub")?.Value;
-
-    Console.WriteLine(context.User);
-    var transactions = await service.GetTransactionsByCategory(req.CategoryNames);
-
-    return Results.Ok(transactions);
-}).RequireAuthorization();
 
 app.Run();

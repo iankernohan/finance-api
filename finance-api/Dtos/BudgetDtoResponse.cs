@@ -7,5 +7,5 @@ public class BudgetDtoResponse
 {
     public int id { get; set; }
     public int limit { get; set; }
-    public Category category { get; set; }
+    public Category? category { get; set; }
 }
