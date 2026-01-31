@@ -1,3 +1,4 @@
+using finance_api.Dtos;
 using finance_api.Plaid;
 using finance_api.Services;
 using Going.Plaid;
@@ -10,23 +11,25 @@ namespace finance_api.Controllers
     [Route("[controller]")]
     public class TransactionsController : ControllerBase
     {
-        private readonly IPlaidService _service;
+        private readonly ITransactionsServiceV2 _service;
+        private readonly IPlaidService _plaidService;
 
-        public TransactionsController(IPlaidService service)
+        public TransactionsController(ITransactionsServiceV2 service, IPlaidService plaidService)
         {
             _service = service;
+            _plaidService = plaidService;
         }
 
         [HttpPost("Transactions")]
         [Authorize]
         public async Task<IActionResult> GetTransactions(GetPlaidTransactionsRequest req)
         {
-            var item = await _service.GetPlaidItem(req.UserId);
+            var item = await _plaidService.GetPlaidItem(req.UserId);
 
             if (item == null)
                 return NotFound("No Plaid item found");
 
-            var data = await _service.GetPlaidTransactions(item, req);
+            var data = await _service.GetTransactions(item, req);
 
             return Ok(data);
         }
@@ -51,12 +54,50 @@ namespace finance_api.Controllers
         [Authorize]
         public async Task<IActionResult> GetTransactionsByCategory(TransactionsByCategoryRequest req)
         {
-            var userId = User.FindFirst("sub")?.Value;
-
-            Console.WriteLine(User);
             var transactions = await _service.GetTransactionsByCategory(req.CategoryNames);
 
             return Ok(transactions);
+        }
+
+        [HttpPost("GetCategoryRules")]
+        [Authorize]
+        public async Task<IActionResult> GetCategoryRules()
+        {
+            var rules = await _service.GetCategoryRules();
+            return Ok(rules);
+        }
+
+        [HttpPost("AddCategoryRule")]
+        [Authorize]
+        public async Task<IActionResult> AddCategoryRule(CategoryRuleRequest req)
+        {
+            await _service.AddCategoryRule(req.Name, req.CategoryId);
+            return Ok("Category Rule Successfully Added.");
+        }
+
+        [HttpPost("UpdateCategoryRule")]
+        [Authorize]
+        public async Task<IActionResult> UpdateCategoryRule(UpdateCategoryRuleRequest req)
+        {
+            var rule = await _service.UpdateCategoryRule(req);
+            return Ok(rule);
+        }
+
+        [HttpPost("DeleteCategoryRule")]
+        [Authorize]
+        public async Task<IActionResult> DeleteCategoryRule(int ruleId)
+        {
+            var rule = await _service.DeleteCategoryRule(ruleId);
+            return Ok(rule);
+        }
+
+        [HttpPost("UpdateCategory")]
+        [Authorize]
+        public async Task<IActionResult> UpdateCategory(UpdateCategoryRequest req)
+        {
+            var updated = await _service.UpdateCategory(req.TransactionId, req.CategoryId);
+
+            return Ok(updated);
         }
     }
 }

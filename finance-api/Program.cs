@@ -72,6 +72,7 @@ builder.Services.AddSingleton<PlaidClient>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
+builder.Services.AddScoped<ITransactionsServiceV2, TransactionsServiceV2>();
 builder.Services.AddScoped<ITransactionsService, TransactionsService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IDatabaseService, DatabaseService>();

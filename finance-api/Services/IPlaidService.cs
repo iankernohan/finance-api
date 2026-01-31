@@ -15,12 +15,4 @@ public interface IPlaidService
     Task<IReadOnlyList<Going.Plaid.Entity.Account>> GetAccounts(string userId, PlaidItem item);
 
     Task AddPlaidItem(PlaidItem item);
-
-    Task<List<PlaidTransaction>> GetPlaidTransactions(PlaidItem item, GetPlaidTransactionsRequest req);
-
-    Task<List<PlaidTransaction>> GetUncategorizedTransactions(string userId);
-
-    Task<List<PlaidTransaction>> GetCategorizedTransactions(string userId);
-
-    Task<Dictionary<string, List<PlaidTransaction>>> GetTransactionsByCategory(List<string>? categoryNames);
 }

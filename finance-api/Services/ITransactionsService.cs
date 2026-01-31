@@ -1,6 +1,7 @@
 using System;
 using finance_api.Dtos;
 using finance_api.Models;
+using finance_api.Plaid;
 using Microsoft.AspNetCore.Mvc;
 
 namespace finance_api.Services;

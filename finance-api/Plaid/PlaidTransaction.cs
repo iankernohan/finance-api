@@ -12,12 +12,12 @@ public class PlaidTransaction
     public string? CurrencyCode = "";
 
     public string MerchantName { get; set; } = "";
-    
+
     public string AccountId { get; set; } = "";
 
     public decimal Amount { get; set; }
 
-    public DateOnly? Date { get; set; }
+    public DateTime? Date { get; set; }
 
     public PlaidTransactionLocation? Location { get; set; }
 
@@ -35,5 +35,5 @@ public class PlaidTransaction
 
     public int? CategoryId { get; set; }
 
-    public Category? Category{ get; set; }
+    public Category? Category { get; set; }
 }

@@ -6,6 +6,8 @@ using AutoMapper;
 using finance_api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using finance_api.Plaid;
+using System.Text.Json;
 
 namespace finance_api.Services;
 
