@@ -5,7 +5,6 @@ using finance_api.Services;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using Going.Plaid;
-using finance_api.Plaid;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -26,7 +25,6 @@ builder.Services.AddCors(options =>
                           policy.WithOrigins("http://localhost:5173", "https://iankernohan.github.io", "https://www.thunderclient.com")
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
-                          // .AllowCredentials();
                       });
 });
 
@@ -72,6 +70,8 @@ builder.Services.AddSingleton<PlaidClient>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
+builder.Services.AddScoped<ICategoryRulesService, CategoryRulesService>();
+builder.Services.AddScoped<ICategoryRulesApplier, CategoryRulesApplier>();
 builder.Services.AddScoped<ITransactionsServiceV2, TransactionsServiceV2>();
 builder.Services.AddScoped<ITransactionsService, TransactionsService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -130,33 +130,6 @@ app.MapGet("/getAllIncome", async (ITransactionsService service) =>
 .Produces<List<TransactionDtoResponse>>()
 .WithOpenApi();
 
-app.MapGet("/getAllCategories", async (ICategoryService service) =>
-{
-    var categories = await service.GetCategories();
-    return Results.Ok(categories);
-})
-.WithName("GetAllCategories")
-.Produces<List<CategoryDtoResponse>>()
-.WithOpenApi();
-
-app.MapGet("/getCategoryByName/{Name}", async (ICategoryService service, string Name) =>
-{
-    var category = await service.GetCategory(Name);
-    return Results.Ok(category);
-})
-.WithName("GetCategoryByName")
-.Produces<CategoryDtoResponse>()
-.WithOpenApi();
-
-app.MapGet("/getCategoryById/{Id}", async (ICategoryService service, int Id) =>
-{
-    var category = await service.GetCategory(Id);
-    return Results.Ok(category);
-})
-.WithName("GetCategoryById")
-.Produces<CategoryDtoResponse>()
-.WithOpenApi();
-
 app.MapPost("/AddTransaction", async (ITransactionsService service, TransactionDtoRequest transaction) =>
 {
     var addedTransaction = await service.AddTransaction(transaction);
@@ -166,21 +139,7 @@ app.MapPost("/AddTransaction", async (ITransactionsService service, TransactionD
 .Produces<TransactionDtoResponse>()
 .WithOpenApi();
 
-app.MapPost("/AddCategory", async (ICategoryService service, CategoryDtoRequest category) =>
-{
-    await service.AddCategory(category);
-    return Results.Ok();
-})
-.WithName("AddCategory")
-.WithOpenApi();
 
-app.MapPost("AddSubCategory", async (ICategoryService service, SubCategoryDtoRequest subCategory) =>
-{
-    await service.AddSubCategory(subCategory);
-    return Results.Ok();
-})
-.WithName("AddSubCategory")
-.WithOpenApi();
 
 app.MapPut("/UpdateTransaction/{id}", async (ITransactionsService service, int id, TransactionDtoRequest updatedTransaction) =>
 {

@@ -75,6 +75,17 @@ public class CategoryService(IMapper mapper, AppDbContext context) : ICategorySe
         await _context.SaveChangesAsync();
     }
 
+    public async Task<Category> UpdateCategory(UpdateCategoryRequest req)
+    {
+        var category = await _context.Category.FirstOrDefaultAsync(c => c.Id == req.Id) ?? throw new Exception($"Unable to find category with id: {req.Id}");
+        category.Name = string.IsNullOrEmpty(req.Name) ? category.Name : req.Name;
+        category.TransactionType = req.TransactionType ?? category.TransactionType;
+
+        await _context.SaveChangesAsync();
+
+        return category;
+    }
+
     public async Task AddSubCategory(SubCategoryDtoRequest subCategory)
     {
         var doesExist = await _context.SubCategory.FirstOrDefaultAsync(s =>
@@ -96,5 +107,28 @@ public class CategoryService(IMapper mapper, AppDbContext context) : ICategorySe
 
         _context.SubCategory.Add(model);
         await _context.SaveChangesAsync();
+
+        return;
+    }
+
+    public async Task<SubCategory> UpdateSubCategory(UpdateSubCategoryRequest req)
+    {
+        var subcategory = await _context.SubCategory.FirstOrDefaultAsync(s => s.Id == req.Id) ?? throw new Exception($"Unable to find subcategory with id: {req.Id}");
+        var category = await _context.Category.FirstOrDefaultAsync(c => c.Id == req.Id) ?? throw new Exception($"Unable to find category with id: {req.CategoryId}");
+
+        subcategory.Name = string.IsNullOrEmpty(req.Name) ? subcategory.Name : req.Name;
+        subcategory.CategoryId = req.CategoryId ?? subcategory.CategoryId;
+
+        await _context.SaveChangesAsync();
+
+        return subcategory;
+    }
+
+    public async Task DeleteSubCategory(int subCategoryId)
+    {
+        var category = await _context.SubCategory.FirstOrDefaultAsync(s => s.Id == subCategoryId) ?? throw new Exception($"Unable to find subcategory with id: {subCategoryId}");
+        _context.SubCategory.Remove(category);
+        await _context.SaveChangesAsync();
+        return;
     }
 }

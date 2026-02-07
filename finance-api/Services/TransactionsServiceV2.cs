@@ -8,10 +8,11 @@ using System.Text.Json;
 
 namespace finance_api.Services;
 
-public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid) : ITransactionsServiceV2
+public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid, ICategoryRulesApplier applier) : ITransactionsServiceV2
 {
     private readonly AppDbContext _context = context;
     private readonly PlaidClient _plaid = plaid;
+    private readonly ICategoryRulesApplier _applier = applier;
 
     public async Task<List<PlaidTransaction>> GetTransactions(PlaidItem item, GetPlaidTransactionsRequest req)
     {
@@ -88,57 +89,7 @@ public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid) : IT
                      .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
 
-    public async Task<List<CategoryRules>> GetCategoryRules()
-    {
-        var rules = await _context.CategoryRules.Include(x => x.Category).ToListAsync();
-        return rules;
-    }
 
-    public async Task AddCategoryRule(string ruleName, int categoryId)
-    {
-        _context.CategoryRules.Add(new CategoryRules { Name = ruleName, CategoryId = categoryId });
-        await _context.SaveChangesAsync();
-        await ApplyCategoryRules();
-        return;
-    }
-
-    public async Task<CategoryRules> UpdateCategoryRule(UpdateCategoryRuleRequest request)
-    {
-        if (string.IsNullOrEmpty(request.Name))
-        {
-            throw new Exception($"Rule Name Must Not Be Empty.");
-        }
-
-        var rule = await _context.CategoryRules.FirstOrDefaultAsync(r => r.Id == request.Id) ?? throw new Exception($"No rule found with id: {request.Id}");
-
-        var category = await _context.Category.FirstOrDefaultAsync(c => c.Id == request.CategoryId) ?? throw new Exception($"No category found with id: {request.CategoryId}");
-
-        if (rule.Name != request.Name && !string.IsNullOrEmpty(request.Name))
-        {
-            rule.Name = request.Name;
-        }
-
-        if (rule.CategoryId != request.CategoryId)
-        {
-            rule.Name = request.Name;
-        }
-
-        await _context.SaveChangesAsync();
-        await ApplyCategoryRules();
-
-        return rule;
-    }
-
-    public async Task<CategoryRules> DeleteCategoryRule(int ruleId)
-    {
-        var rule = await _context.CategoryRules.FirstOrDefaultAsync(r => r.Id == ruleId) ?? throw new Exception($"No Rule Found With Id:  {ruleId}");
-
-        _context.CategoryRules.Remove(rule);
-
-        await _context.SaveChangesAsync();
-
-        return rule;
-    }
 
     public async Task<PlaidTransaction> UpdateCategory(string transactionId, int categoryId)
     {
@@ -170,7 +121,7 @@ public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid) : IT
         List<Going.Plaid.Entity.Transaction> data = JsonSerializer.Deserialize<IReadOnlyList<Going.Plaid.Entity.Transaction>>(json)?.ToList()!;
 
         var mapped = MapPlaidTransactions(data);
-        await ApplyCategoryRules(mapped);
+        await _applier.ApplyCategoryRules(mapped);
         mapped.Reverse();
         _context.PlaidTransactions.AddRange(mapped);
         await _context.SaveChangesAsync();
@@ -205,7 +156,7 @@ public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid) : IT
 
         // Map and update category for new transactions - add to database
         var mapped = MapPlaidTransactions(newTransactions);
-        await ApplyCategoryRules(mapped);
+        await _applier.ApplyCategoryRules(mapped);
         mapped.Reverse();
         _context.PlaidTransactions.AddRange(mapped);
         await _context.SaveChangesAsync();
@@ -285,35 +236,5 @@ public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid) : IT
         }).ToList();
 
         return mapped;
-    }
-
-    private async Task ApplyCategoryRules(List<PlaidTransaction> transactions)
-    {
-        var categoryRules = await _context.CategoryRules.ToListAsync();
-        foreach (var t in transactions)
-        {
-            var name = String.IsNullOrEmpty(t.MerchantName) ? t.Name : t.MerchantName;
-            var rule = categoryRules.FirstOrDefault(r => name.Contains(r.Name));
-            if (rule is not null)
-            {
-                t.CategoryId = rule.CategoryId;
-            }
-        }
-    }
-
-    private async Task ApplyCategoryRules()
-    {
-        var transactions = await _context.PlaidTransactions.ToListAsync();
-        var categoryRules = await _context.CategoryRules.ToListAsync();
-        foreach (var t in transactions)
-        {
-            var name = String.IsNullOrEmpty(t.MerchantName) ? t.Name : t.MerchantName;
-            var rule = categoryRules.FirstOrDefault(r => name.Contains(r.Name));
-            if (rule is not null)
-            {
-                t.CategoryId = rule.CategoryId;
-            }
-        }
-        await _context.SaveChangesAsync();
     }
 }
