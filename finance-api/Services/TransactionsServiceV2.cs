@@ -1,5 +1,6 @@
 using finance_api.Data;
 using finance_api.Dtos;
+using finance_api.Enums;
 using finance_api.Models;
 using finance_api.Plaid;
 using Going.Plaid;
@@ -18,7 +19,7 @@ public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid, ICat
     {
         var lastTrans = await _context.PlaidTransactions.OrderByDescending(x => x.Date).FirstOrDefaultAsync();
 
-        IQueryable<PlaidTransaction> query = _context.PlaidTransactions.Include(x => x.Category);
+        IQueryable<PlaidTransaction> query = _context.PlaidTransactions.Include(x => x.Category).Include(x => x.SubCategory);
         if (lastTrans is null)
         {
             await SeedDb();
@@ -35,7 +36,7 @@ public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid, ICat
             return await query.OrderByDescending(x => x.Date).ToListAsync();
         }
 
-        return await _context.PlaidTransactions.Include(x => x.Category).OrderByDescending(x => x.Date).ToListAsync();
+        return await _context.PlaidTransactions.Include(x => x.Category).Include(x => x.SubCategory).OrderByDescending(x => x.Date).ToListAsync();
     }
 
     public async Task<List<PlaidTransaction>> GetUncategorizedTransactions(string userId)
@@ -89,8 +90,6 @@ public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid, ICat
                      .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
 
-
-
     public async Task<PlaidTransaction> UpdateCategory(string transactionId, int categoryId)
     {
         var transaction = await _context.PlaidTransactions.FirstOrDefaultAsync(t => t.Id == transactionId);
@@ -113,6 +112,48 @@ public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid, ICat
 
         var updated = await _context.PlaidTransactions.Include(t => t.Category).FirstAsync(t => t.Id == transaction.Id);
         return updated;
+    }
+
+    public async Task<MonthlySummary> GetMonthlySummary(MonthlySummaryRequest req)
+    {
+        var monthName = GetMonthName(req.Month);
+        var income = await _context.PlaidTransactions
+            .Where(t => t.Date.HasValue && t.Date.Value.Month == req.Month && t.Date.Value.Year == req.Year)
+            .Where(t => t.Amount < 0).
+            SumAsync(t => t.Amount);
+        var expenses = await _context.PlaidTransactions
+            .Where(t => t.Date.HasValue && t.Date.Value.Month == req.Month && t.Date.Value.Year == req.Year)
+            .Where(t => t.Amount > 0)
+            .SumAsync(t => t.Amount);
+
+        var categories = await _context.Category.Select(c => c.Name).ToListAsync();
+        Dictionary<string, List<PlaidTransaction>> transactionsByCategory = new();
+
+        foreach (var category in categories)
+        {
+            var transactions = await _context.PlaidTransactions
+                .Where(t => t.Date.HasValue && t.Date.Value.Month == req.Month && t.Date.Value.Year == req.Year)
+                .Where(t => t.Category != null && t.Category.Name == category)
+                .Include(t => t.SubCategory)
+                .ToListAsync();
+
+            if (transactions.Count > 0)
+            {
+                transactionsByCategory[category] = transactions;
+            }
+        }
+        transactionsByCategory["Uncategorized"] = await _context.PlaidTransactions
+            .Where(t => t.Date.HasValue && t.Date.Value.Month == req.Month && t.Date.Value.Year == req.Year)
+            .Where(t => t.Category == null).ToListAsync();
+
+        return new MonthlySummary
+        {
+            MonthName = monthName,
+            Year = req.Year,
+            IncomeTotal = income,
+            ExpenseTotal = expenses,
+            Categories = transactionsByCategory
+        };
     }
 
     private async Task SeedDb()
@@ -236,5 +277,25 @@ public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid, ICat
         }).ToList();
 
         return mapped;
+    }
+
+    private string GetMonthName(int month)
+    {
+        return month switch
+        {
+            1 => "January",
+            2 => "February",
+            3 => "March",
+            4 => "April",
+            5 => "May",
+            6 => "June",
+            7 => "July",
+            8 => "August",
+            9 => "September",
+            10 => "October",
+            11 => "November",
+            12 => "December",
+            _ => throw new ArgumentOutOfRangeException(nameof(month), "Month must be between 1 and 12")
+        };
     }
 }

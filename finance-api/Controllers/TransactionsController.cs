@@ -58,7 +58,6 @@ namespace finance_api.Controllers
             return Ok(transactions);
         }
 
-
         [HttpPost("UpdateCategory")]
         [Authorize]
         public async Task<IActionResult> UpdateCategory(UpdateTransactionCategoryRequest req)
@@ -66,6 +65,14 @@ namespace finance_api.Controllers
             var updated = await _service.UpdateCategory(req.TransactionId, req.CategoryId);
 
             return Ok(updated);
+        }
+
+        [HttpPost("MonthlySummary")]
+        [Authorize]
+        public async Task<IActionResult> GetMonthlySummary(MonthlySummaryRequest req)
+        {
+            var summary = await _service.GetMonthlySummary(req);
+            return Ok(summary);
         }
     }
 }

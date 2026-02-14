@@ -79,6 +79,7 @@ public class CategoryService(IMapper mapper, AppDbContext context) : ICategorySe
     {
         var category = await _context.Category.FirstOrDefaultAsync(c => c.Id == req.Id) ?? throw new Exception($"Unable to find category with id: {req.Id}");
         category.Name = string.IsNullOrEmpty(req.Name) ? category.Name : req.Name;
+        category.BudgetLimit = req.BudgetLimit ?? category.BudgetLimit;
         category.TransactionType = req.TransactionType ?? category.TransactionType;
 
         await _context.SaveChangesAsync();

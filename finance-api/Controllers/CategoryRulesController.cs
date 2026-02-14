@@ -29,7 +29,7 @@ namespace finance_api.Controllers
         [Authorize]
         public async Task<IActionResult> AddCategoryRule(CategoryRuleRequest req)
         {
-            await _service.AddCategoryRule(req.Name, req.CategoryId, req.SubCategoryId);
+            await _service.AddCategoryRule(req.Name, req.CategoryId, req.SubCategoryId, req.Amount);
             return Ok();
         }
 

@@ -17,9 +17,9 @@ public class CategoryRulesService(AppDbContext context, ICategoryRulesApplier ap
         return rules;
     }
 
-    public async Task AddCategoryRule(string ruleName, int categoryId, int? subCategoryId)
+    public async Task AddCategoryRule(string ruleName, int categoryId, int? subCategoryId, decimal? amount)
     {
-        _context.CategoryRules.Add(new CategoryRules { Name = ruleName, CategoryId = categoryId, SubCategoryId = subCategoryId });
+        _context.CategoryRules.Add(new CategoryRules { Name = ruleName, Amount = amount, CategoryId = categoryId, SubCategoryId = subCategoryId });
         await _context.SaveChangesAsync();
         await _applier.ApplyCategoryRules();
         return;
