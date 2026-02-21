@@ -71,6 +71,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.Configure<PlaidOptions>(
     builder.Configuration.GetSection("Plaid"));
 builder.Services.AddSingleton<PlaidClient>();
+builder.Services.AddSingleton<EncryptionService>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
