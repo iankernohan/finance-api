@@ -29,18 +29,11 @@ namespace finance_api.Controllers
         [Authorize]
         public async Task<IActionResult> ExchangePublicToken(ExchangePublicTokenRequest req)
         {
-            var exchange = await _service.ExchangePublicToken(req);
-
-            var item = new PlaidItem
-            {
-                UserId = req.UserId,
-                ItemId = exchange.ItemId,
-                AccessToken = exchange.AccessToken
-            };
+            var item = await _service.ExchangePublicToken(req);
 
             await _service.AddPlaidItem(item);
 
-            return Ok(new { itemId = exchange.ItemId });
+            return Ok(new { itemId = item.ItemId });
         }
     }
 }

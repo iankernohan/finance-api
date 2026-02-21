@@ -1,3 +1,4 @@
+using finance_api.Dtos;
 using finance_api.Services;
 using Going.Plaid;
 using Microsoft.AspNetCore.Authorization;
@@ -29,6 +30,14 @@ namespace finance_api.Controllers
             var accounts = await _service.GetAccounts(userId, item);
 
             return Ok(accounts);
+        }
+
+        [HttpPost("UserHasConnection")]
+        [Authorize]
+        public async Task<IActionResult> UserHasBankConnection(UserHasBankConnectionRequest req)
+        {
+            var item = await _service.GetPlaidItem(req.UserId);
+            return Ok(!string.IsNullOrEmpty(item?.ItemId));
         }
     }
 }
