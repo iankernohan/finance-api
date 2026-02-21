@@ -9,11 +9,12 @@ using System.Text.Json;
 
 namespace finance_api.Services;
 
-public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid, ICategoryRulesApplier applier) : ITransactionsServiceV2
+public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid, ICategoryRulesApplier applier, EncryptionService encryptionService) : ITransactionsServiceV2
 {
     private readonly AppDbContext _context = context;
     private readonly PlaidClient _plaid = plaid;
     private readonly ICategoryRulesApplier _applier = applier;
+    private readonly EncryptionService _encryptionService = encryptionService;
 
     public async Task<List<PlaidTransaction>> GetTransactions(PlaidItem item, GetPlaidTransactionsRequest req)
     {
@@ -178,7 +179,7 @@ public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid, ICat
         // Fetch transactions from plaid
         var request = new Going.Plaid.Transactions.TransactionsGetRequest
         {
-            AccessToken = item.AccessToken,
+            AccessToken = _encryptionService.Decrypt(item.EncryptedAccessToken),
             StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(numDaysToFetch * -1)),
             EndDate = DateOnly.FromDateTime(DateTime.UtcNow)
         };
@@ -186,12 +187,8 @@ public class TransactionsServiceV2(AppDbContext context, PlaidClient plaid, ICat
         // var response = new Going.Plaid.Transactions.TransactionsGetResponse { Transactions = new List<Going.Plaid.Entity.Transaction> { } };
         var response = await _plaid.TransactionsGetAsync(request);
 
-
         // Filter only new transactions
         var newTransactions = response.Transactions.ToList();
-        Console.WriteLine("==============================================================================================================");
-        Console.WriteLine(newTransactions);
-        Console.WriteLine("==============================================================================================================");
         var lastTransIdx = newTransactions.FindIndex(x => x.Date?.ToDateTime(TimeOnly.MinValue) == lastTrans.Date && x.Amount == lastTrans.Amount && x.Name == lastTrans.Name && x.TransactionType == lastTrans.TransactionType);
         newTransactions = newTransactions[0..lastTransIdx];
 

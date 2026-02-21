@@ -8,7 +8,7 @@ public interface IPlaidService
 {
     Task<string> CreateLinkToken(CreateLinkTokenRequest req);
 
-    Task<Going.Plaid.Item.ItemPublicTokenExchangeResponse> ExchangePublicToken(ExchangePublicTokenRequest req);
+    Task<PlaidItem> ExchangePublicToken(ExchangePublicTokenRequest req);
 
     Task<PlaidItem?> GetPlaidItem(string userId);
 

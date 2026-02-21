@@ -12,11 +12,13 @@ public class PlaidService : IPlaidService
 {
     private readonly AppDbContext _context;
     private readonly PlaidClient _plaid;
+    private readonly EncryptionService _encryptionService;
 
-    public PlaidService(AppDbContext context, PlaidClient plaid)
+    public PlaidService(AppDbContext context, PlaidClient plaid, EncryptionService encryptionService)
     {
         _context = context;
         _plaid = plaid;
+        _encryptionService = encryptionService;
     }
 
     public async Task<string> CreateLinkToken(CreateLinkTokenRequest req)
@@ -35,7 +37,7 @@ public class PlaidService : IPlaidService
         return response.LinkToken;
     }
 
-    public async Task<Going.Plaid.Item.ItemPublicTokenExchangeResponse> ExchangePublicToken(ExchangePublicTokenRequest req)
+    public async Task<PlaidItem> ExchangePublicToken(ExchangePublicTokenRequest req)
     {
         var exchange = await _plaid.ItemPublicTokenExchangeAsync(
         new Going.Plaid.Item.ItemPublicTokenExchangeRequest
@@ -43,7 +45,14 @@ public class PlaidService : IPlaidService
             PublicToken = req.PublicToken
         });
 
-        return exchange;
+        var item = new PlaidItem
+        {
+            UserId = req.UserId,
+            ItemId = exchange.ItemId,
+            EncryptedAccessToken = _encryptionService.Encrypt(exchange.AccessToken)
+        };
+
+        return item;
     }
 
     public async Task AddPlaidItem(PlaidItem item)
@@ -57,7 +66,7 @@ public class PlaidService : IPlaidService
         var response = await _plaid.AccountsGetAsync(
         new Going.Plaid.Accounts.AccountsGetRequest
         {
-            AccessToken = item.AccessToken
+            AccessToken = _encryptionService.Decrypt(item.EncryptedAccessToken)
         });
 
         return response.Accounts;
