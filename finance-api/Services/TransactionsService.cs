@@ -126,7 +126,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             .Where(t => t.Amount > 0)
             .SumAsync(t => t.Amount);
 
-        var categories = await _context.Category.Select(c => c.Name).ToListAsync();
+        var categories = await _context.Category.OrderBy(c => c.Name).Select(c => c.Name).ToListAsync();
         Dictionary<string, List<Transaction>> transactionsByCategory = new();
 
         foreach (var category in categories)
