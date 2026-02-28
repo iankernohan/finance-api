@@ -15,12 +15,14 @@ public class CategoryService(IMapper mapper, AppDbContext context) : ICategorySe
     public async Task<List<CategoryDtoResponse>> GetCategories()
     {
         var categories = await _context.Category
+            .OrderBy(c => c.Name)
             .Select(c => _mapper.Map<CategoryDtoResponse>(c))
             .ToListAsync();
 
         foreach (var category in categories)
         {
             var subcategories = await _context.SubCategory
+                .OrderBy(s => s.Name)
                 .Where(s => s.CategoryId == category.Id)
                 .ToListAsync();
             category.SubCategories = subcategories;
@@ -37,6 +39,7 @@ public class CategoryService(IMapper mapper, AppDbContext context) : ICategorySe
         var model = _mapper.Map<CategoryDtoResponse>(category);
 
         var subcategories = await _context.SubCategory
+            .OrderBy(s => s.Name)
             .Where(s => s.CategoryId == Id)
             .ToListAsync();
         model.SubCategories = subcategories;

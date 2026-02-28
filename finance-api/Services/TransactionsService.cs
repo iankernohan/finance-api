@@ -163,6 +163,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
 
         foreach (var t in data)
         {
+            t.Date = DateTime.SpecifyKind(t.Date ?? DateTime.Now, DateTimeKind.Utc);
             t.Category = null;
             t.SubCategory = null;
             t.UserId = "b63977c9-0e52-4677-9e75-b4b77778405b";

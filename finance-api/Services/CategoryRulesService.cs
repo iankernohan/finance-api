@@ -13,7 +13,11 @@ public class CategoryRulesService(AppDbContext context, ICategoryRulesApplier ap
 
     public async Task<List<CategoryRules>> GetCategoryRules()
     {
-        var rules = await _context.CategoryRules.Include(x => x.Category).Include(x => x.SubCategory).ToListAsync();
+        var rules = await _context.CategoryRules
+        .OrderBy(x => x.Name)
+        .Include(x => x.Category)
+        .Include(x => x.SubCategory)
+        .ToListAsync();
         return rules;
     }
 
