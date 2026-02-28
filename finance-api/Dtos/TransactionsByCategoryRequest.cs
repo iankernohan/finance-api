@@ -1,6 +1,6 @@
 using System;
 
-namespace finance_api.Plaid;
+namespace finance_api.Dtos;
 
 public class TransactionsByCategoryRequest
 {

@@ -1,4 +1,4 @@
-using finance_api.Plaid;
+using finance_api.Models;
 
 namespace finance_api.Services;
 
@@ -6,5 +6,5 @@ public interface ICategoryRulesApplier
 {
     Task ApplyCategoryRules();
 
-    Task ApplyCategoryRules(List<PlaidTransaction> transactions);
+    Task ApplyCategoryRules(List<Transaction> transactions);
 }

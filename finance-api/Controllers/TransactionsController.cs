@@ -10,10 +10,10 @@ namespace finance_api.Controllers
     [Route("[controller]")]
     public class TransactionsController : ControllerBase
     {
-        private readonly ITransactionsServiceV2 _service;
+        private readonly ITransactionsService _service;
         private readonly IPlaidService _plaidService;
 
-        public TransactionsController(ITransactionsServiceV2 service, IPlaidService plaidService)
+        public TransactionsController(ITransactionsService service, IPlaidService plaidService)
         {
             _service = service;
             _plaidService = plaidService;
@@ -21,7 +21,7 @@ namespace finance_api.Controllers
 
         [HttpPost("Transactions")]
         [Authorize]
-        public async Task<IActionResult> GetTransactions(GetPlaidTransactionsRequest req)
+        public async Task<IActionResult> GetTransactions(GetTransactionsRequest req)
         {
             var item = await _plaidService.GetPlaidItem(req.UserId);
 
@@ -35,7 +35,7 @@ namespace finance_api.Controllers
 
         [HttpPost("UncategorizedTransactions")]
         [Authorize]
-        public async Task<IActionResult> GetUncategorizedTransactions(GetPlaidTransactionsRequest req)
+        public async Task<IActionResult> GetUncategorizedTransactions(GetTransactionsRequest req)
         {
             var transactions = await _service.GetUncategorizedTransactions(req.UserId);
             return Ok(transactions);
@@ -43,7 +43,7 @@ namespace finance_api.Controllers
 
         [HttpPost("CategorizedTransactions")]
         [Authorize]
-        public async Task<IActionResult> GetCategorizedTransactions(GetPlaidTransactionsRequest req)
+        public async Task<IActionResult> GetCategorizedTransactions(GetTransactionsRequest req)
         {
             var transactions = await _service.GetCategorizedTransactions(req.UserId);
             return Ok(transactions);

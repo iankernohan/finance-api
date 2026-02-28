@@ -4,7 +4,7 @@ using finance_api.Data;
 using finance_api.Plaid;
 using Going.Plaid;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+using finance_api.Dtos;
 
 namespace finance_api.Services;
 

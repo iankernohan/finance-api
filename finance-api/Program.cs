@@ -1,5 +1,4 @@
 using finance_api.Data;
-using finance_api.Dtos;
 using finance_api.Profiles;
 using finance_api.Services;
 using Microsoft.EntityFrameworkCore;
@@ -77,11 +76,8 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddScoped<ICategoryRulesService, CategoryRulesService>();
 builder.Services.AddScoped<ICategoryRulesApplier, CategoryRulesApplier>();
-builder.Services.AddScoped<ITransactionsServiceV2, TransactionsServiceV2>();
 builder.Services.AddScoped<ITransactionsService, TransactionsService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IDatabaseService, DatabaseService>();
-builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<IPlaidService, PlaidService>();
 
 var app = builder.Build();
@@ -98,164 +94,5 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();
-
-app.MapGet("/getTransactions", async (ITransactionsService service) =>
-{
-    var transactions = await service.GetAllTransactions();
-    return Results.Ok(transactions);
-})
-.WithName("GetAllData")
-.Produces<List<TransactionDtoResponse>>(StatusCodes.Status200OK)
-.WithOpenApi();
-
-app.MapGet("/getTransaction", async (ITransactionsService service, int id) =>
-{
-    var transaction = await service.GetTransaction(id);
-    return Results.Ok(transaction);
-})
-.WithName("GetTransactionById")
-.Produces<TransactionDtoResponse>(StatusCodes.Status200OK)
-.WithOpenApi();
-
-app.MapGet("/getAllExpenses", async (ITransactionsService service) =>
-{
-    var transactions = await service.GetAllExpenses();
-    return Results.Ok(transactions);
-})
-.WithName("GetAllExspenses")
-.Produces<List<TransactionDtoResponse>>()
-.WithOpenApi();
-
-app.MapGet("/getAllIncome", async (ITransactionsService service) =>
-{
-    var transactions = await service.GetAllIncome();
-    return Results.Ok(transactions);
-})
-.WithName("GetAllIncome")
-.Produces<List<TransactionDtoResponse>>()
-.WithOpenApi();
-
-app.MapPost("/AddTransaction", async (ITransactionsService service, TransactionDtoRequest transaction) =>
-{
-    var addedTransaction = await service.AddTransaction(transaction);
-    return Results.Ok(addedTransaction);
-})
-.WithName("AddTransaction")
-.Produces<TransactionDtoResponse>()
-.WithOpenApi();
-
-
-
-app.MapPut("/UpdateTransaction/{id}", async (ITransactionsService service, int id, TransactionDtoRequest updatedTransaction) =>
-{
-    var transaction = await service.UpdateTransaction(id, updatedTransaction);
-    return Results.Ok(transaction);
-})
-.WithName("UpdateTransaction")
-.Produces<TransactionDtoResponse>()
-.WithOpenApi();
-
-app.MapDelete("/DeleteTransaction/{id}", async (ITransactionsService service, int id) =>
-{
-    var transaction = await service.DeleteTransaction(id);
-    if (transaction is not null)
-    {
-        return Results.Ok(transaction);
-    }
-    return Results.NotFound($"No transaction found with the id {id}");
-})
-.WithName("DeleteTransaction")
-.WithOpenApi();
-
-app.MapPost("AddBudget", async (IBudgetService service, BudgetDtoRequest budget) =>
-{
-    await service.AddBudget(budget);
-    return Results.Ok();
-})
-.WithName("AddBudget")
-.WithOpenApi();
-
-app.MapPut("UpdateBudget", async (IBudgetService service, UpdateBudgetRequest budget) =>
-{
-    var updated = await service.UpdateBudget(budget);
-    return Results.Ok(updated);
-})
-.WithName("UpdateBudget")
-.Produces<BudgetDtoResponse>()
-.WithOpenApi();
-
-app.MapGet("GetAllBudgets", async (IBudgetService service) =>
-{
-    var budgets = await service.GetAllBudgets();
-    return Results.Ok(budgets);
-})
-.WithName("GetAllBudgets")
-.Produces<BudgetDtoResponse>()
-.WithOpenApi();
-
-app.MapPost("resetDatabase", async (IDatabaseService service, IWebHostEnvironment env) =>
-{
-    if (!env.IsDevelopment())
-    {
-        return Results.BadRequest("Database reset is only allowed in development environment.");
-    }
-    await service.ResetDatabaseAsync();
-    return Results.Ok("Database reset successfully.");
-})
-.WithName("ResetDatabase")
-.WithOpenApi();
-
-app.MapPost("AddRecurringTransaction", async (ITransactionsService service, RecurringTransactionRequest request) =>
-{
-    var result = await service.AddRecurringTransaction(request);
-    return Results.Ok(result);
-})
-.WithName("AddRecurringTransaction")
-.WithOpenApi();
-
-app.MapGet("GetAllRecurringTransactions", async (ITransactionsService service) =>
-{
-    var transactions = await service.GetAllRecurringTransactions();
-    return Results.Ok(transactions);
-})
-.WithName("GetAllRecurringTransactions")
-.Produces<List<RecurringTransactionResponse>>()
-.WithOpenApi();
-
-app.MapDelete("DeleteRecurringTransaction/{id}", async (ITransactionsService service, int id) =>
-{
-    var transaction = await service.DeleteRecurringTransaction(id);
-    if (transaction is not null)
-    {
-        return Results.Ok(transaction);
-    }
-    return Results.NotFound($"No recurring transaction found with the id {id}");
-})
-.WithName("DeleteRecurringTransaction")
-.WithOpenApi();
-
-app.MapPut("UpdateRecurringTransaction/{id}", async (ITransactionsService service, int id, RecurringTransactionUpdateRequest updatedTransaction) =>
-{
-    try
-    {
-        var transaction = await service.UpdateRecurringTransaction(id, updatedTransaction);
-        return Results.Ok(transaction);
-    }
-    catch (Exception ex)
-    {
-        return Results.BadRequest(ex.Message);
-    }
-})
-.WithName("UpdateRecurringTransaction")
-.Produces<RecurringTransactionResponse>()
-.WithOpenApi();
-
-app.MapPost("ProcessRecurringTransactions", async (ITransactionsService service) =>
-{
-    await service.ProcessRecurringTransactions();
-    return Results.Ok("Processed recurring transactions.");
-})
-.WithName("ProcessRecurringTransactions")
-.WithOpenApi();
 
 app.Run();

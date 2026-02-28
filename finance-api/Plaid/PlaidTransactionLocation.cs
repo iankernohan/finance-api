@@ -1,16 +1,22 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace finance_api.Plaid;
 
 public class PlaidTransactionLocation
 {
-      public string? Address {get; set;}
+      [JsonPropertyName("address")]
+      public string? Address { get; set; }
 
-      public string? City {get; set;}
+      [JsonPropertyName("city")]
+      public string? City { get; set; }
 
-      public string? Region {get; set;}
+      [JsonPropertyName("region")]
+      public string? Region { get; set; }
 
-      public string? PostalCode {get; set;}
+      [JsonPropertyName("postalCode")]
+      public string? PostalCode { get; set; }
 
-      public string? Country {get; set;}
+      [JsonPropertyName("country")]
+      public string? Country { get; set; }
 }

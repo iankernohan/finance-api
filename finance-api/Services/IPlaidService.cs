@@ -1,6 +1,6 @@
 using System;
 using finance_api.Plaid;
-using Going.Plaid;
+using finance_api.Dtos;
 
 namespace finance_api.Services;
 

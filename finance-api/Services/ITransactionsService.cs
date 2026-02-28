@@ -1,23 +1,15 @@
-using System;
 using finance_api.Dtos;
-using finance_api.Models;
 using finance_api.Plaid;
-using Microsoft.AspNetCore.Mvc;
+using finance_api.Models;
 
 namespace finance_api.Services;
 
 public interface ITransactionsService
 {
-    Task<List<TransactionDtoResponse>> GetAllTransactions();
-    Task<TransactionDtoResponse> GetTransaction(int id);
-    Task<List<TransactionDtoResponse>> GetAllExpenses();
-    Task<List<TransactionDtoResponse>> GetAllIncome();
-    Task<TransactionDtoResponse> AddTransaction(TransactionDtoRequest transaction);
-    Task<TransactionDtoResponse> UpdateTransaction(int id, TransactionDtoRequest updatedtransaction);
-    Task<TransactionDtoResponse?> DeleteTransaction(int id);
-    Task<IActionResult> AddRecurringTransaction(RecurringTransactionRequest request);
-    Task<List<RecurringTransactionResponse>> GetAllRecurringTransactions();
-    Task<RecurringTransactionResponse?> DeleteRecurringTransaction(int id);
-    Task<RecurringTransactionResponse?> UpdateRecurringTransaction(int id, RecurringTransactionUpdateRequest updatedTransaction);
-    Task ProcessRecurringTransactions();
+    Task<List<Transaction>> GetTransactions(PlaidItem item, GetTransactionsRequest req);
+    Task<List<Transaction>> GetUncategorizedTransactions(string userId);
+    Task<List<Transaction>> GetCategorizedTransactions(string userId);
+    Task<Dictionary<string, List<Transaction>>> GetTransactionsByCategory(List<string>? categoryNames);
+    Task<Transaction> UpdateCategory(string transactionId, int categoryId);
+    Task<MonthlySummary> GetMonthlySummary(MonthlySummaryRequest req);
 }

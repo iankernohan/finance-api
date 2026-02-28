@@ -1,9 +1,9 @@
 using System;
 using finance_api.Dtos;
 
-namespace finance_api.Plaid;
+namespace finance_api.Dtos;
 
-public class GetPlaidTransactionsRequest
+public class GetTransactionsRequest
 {
     public required string UserId { get; set; }
 

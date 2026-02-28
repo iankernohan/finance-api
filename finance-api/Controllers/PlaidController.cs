@@ -1,6 +1,5 @@
-using finance_api.Plaid;
+using finance_api.Dtos;
 using finance_api.Services;
-using Going.Plaid;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
