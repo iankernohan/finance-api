@@ -33,6 +33,15 @@ namespace finance_api.Controllers
             return Ok(data);
         }
 
+        [HttpPost("TransactionsCount")]
+        [Authorize]
+        public async Task<IActionResult> GetTransactionsCount(TransactionsCountRequest req)
+        {
+            var data = await _service.GetTransactionsCount(req);
+
+            return Ok(data);
+        }
+
         [HttpPost("UncategorizedTransactions")]
         [Authorize]
         public async Task<IActionResult> GetUncategorizedTransactions(GetTransactionsRequest req)

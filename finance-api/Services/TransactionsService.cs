@@ -45,6 +45,16 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             .ToListAsync();
     }
 
+    public async Task<int> GetTransactionsCount(TransactionsCountRequest req)
+    {
+        IQueryable<Transaction> query = _context.Transactions;
+        if (req.Filters is not null)
+        {
+            query = ApplyFilters(query, req.Filters);
+        }
+        return await query.CountAsync();
+    }
+
     public async Task<List<Transaction>> GetUncategorizedTransactions(string userId)
     {
         var transactions = await _context.Transactions
