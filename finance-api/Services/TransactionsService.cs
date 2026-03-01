@@ -26,8 +26,8 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         }
         else
         {
-            // if (DateTime.Now.ToString("MM:dd:yyyy") != lastTrans.Date?.ToString("MM:dd:yyyy"))
-            //     await SyncTransactions(item, lastTrans);
+            if (DateTime.Now.ToString("MM:dd:yyyy") != lastTrans.Date?.ToString("MM:dd:yyyy"))
+                await SyncTransactions(item, lastTrans);
         }
 
         if (req.Filters is not null)
@@ -252,6 +252,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         var mapped = transactions.Select(x => new Transaction
         {
             Id = x.TransactionId ?? "",
+            UserId = "b63977c9-0e52-4677-9e75-b4b77778405b",
             AccountId = x.AccountId ?? "",
             Amount = x.Amount ?? 0,
             PlaidCategory = new PlaidTransactionCategory
@@ -262,7 +263,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             },
             CategoryIconUrl = x.PersonalFinanceCategoryIconUrl,
             CurrencyCode = x.IsoCurrencyCode,
-            Date = x.Date?.ToDateTime(TimeOnly.MinValue),
+            Date = DateTime.SpecifyKind(x.Date?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Now, DateTimeKind.Utc),
             Location = new PlaidTransactionLocation
             {
                 Address = x.Location?.Address,
