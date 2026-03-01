@@ -240,7 +240,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             query = query.Where(t => t.Amount <= filters.MaxAmount.Value);
 
         if (!string.IsNullOrEmpty(filters.Description))
-            query = query.Where(t => t.Name.Contains(filters.Description) || t.MerchantName.Contains(filters.Description));
+            query = query.Where(t => t.Name.ToLower().Contains(filters.Description.ToLower()) || t.MerchantName.ToLower().Contains(filters.Description.ToLower()));
 
         if (filters.Category?.Length > 0)
             query = query.Where(t => t.Category != null && filters.Category.Contains(t.Category.Name));
