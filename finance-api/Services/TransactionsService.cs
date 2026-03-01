@@ -22,7 +22,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         IQueryable<Transaction> query = _context.Transactions.Include(x => x.Category).Include(x => x.SubCategory);
         if (lastTrans is null)
         {
-            await SeedDb();
+            await SeedDb(req.UserId);
         }
         else
         {
@@ -36,7 +36,13 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             return await query.OrderByDescending(x => x.Date).ToListAsync();
         }
 
-        return await _context.Transactions.Include(x => x.Category).Include(x => x.SubCategory).OrderByDescending(x => x.Date).ToListAsync();
+        return await _context.Transactions
+            .Include(x => x.Category)
+            .Include(x => x.SubCategory)
+            .OrderByDescending(x => x.Date)
+            .Skip((req.Page - 1) * req.PageSize + 1)
+            .Take(req.PageSize)
+            .ToListAsync();
     }
 
     public async Task<List<Transaction>> GetUncategorizedTransactions(string userId)
@@ -156,7 +162,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         };
     }
 
-    private async Task SeedDb()
+    private async Task SeedDb(string userId)
     {
         string json = File.ReadAllText("../finance-api/Plaid/data.json");
         List<Transaction> data = JsonSerializer.Deserialize<List<Transaction>>(json)?.ToList()!;
@@ -166,7 +172,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             t.Date = DateTime.SpecifyKind(t.Date ?? DateTime.Now, DateTimeKind.Utc);
             t.Category = null;
             t.SubCategory = null;
-            t.UserId = "b63977c9-0e52-4677-9e75-b4b77778405b";
+            t.UserId = userId;
         }
 
         await _applier.ApplyCategoryRules(data);
@@ -199,7 +205,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         newTransactions = newTransactions[0..lastTransIdx];
 
         // Map and update category for new transactions - add to database
-        var mapped = MapTransactions(newTransactions);
+        var mapped = MapTransactions(newTransactions, item.UserId);
         await _applier.ApplyCategoryRules(mapped);
         mapped.Reverse();
         _context.Transactions.AddRange(mapped);
@@ -247,12 +253,12 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         return query;
     }
 
-    private List<Transaction> MapTransactions(IReadOnlyList<Going.Plaid.Entity.Transaction> transactions)
+    private List<Transaction> MapTransactions(IReadOnlyList<Going.Plaid.Entity.Transaction> transactions, string userId)
     {
         var mapped = transactions.Select(x => new Transaction
         {
             Id = x.TransactionId ?? "",
-            UserId = "b63977c9-0e52-4677-9e75-b4b77778405b",
+            UserId = userId,
             AccountId = x.AccountId ?? "",
             Amount = x.Amount ?? 0,
             PlaidCategory = new PlaidTransactionCategory
