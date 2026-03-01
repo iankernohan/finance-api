@@ -21,8 +21,8 @@ public class CategoryRulesApplier(AppDbContext context) : ICategoryRulesApplier
         foreach (var t in transactions)
         {
             var name = String.IsNullOrEmpty(t.MerchantName) ? t.Name : t.MerchantName;
-            var rule = categoryRules.FirstOrDefault(r => name.Contains(r.Name) && r.Amount is null) ??
-            categoryRules.FirstOrDefault(r => name.Contains(r.Name) && r.Amount == t.Amount);
+            var rule = categoryRules.FirstOrDefault(r => name.ToLower().Contains(r.Name.ToLower()) && r.Amount is null) ??
+            categoryRules.FirstOrDefault(r => name.ToLower().Contains(r.Name.ToLower()) && r.Amount == t.Amount);
             if (rule is not null)
             {
                 t.CategoryId = rule.CategoryId;
