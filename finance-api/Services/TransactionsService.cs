@@ -45,6 +45,33 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             .ToListAsync();
     }
 
+    public async Task<Transaction> UpdateTransaction(Transaction updatedTransaction)
+    {
+        var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == updatedTransaction.Id);
+        if (transaction == null)
+        {
+            throw new Exception($"No transaction found with id {updatedTransaction.Id}");
+        }
+
+        transaction.Amount = updatedTransaction.Amount;
+        transaction.Name = updatedTransaction.Name;
+        transaction.MerchantName = updatedTransaction.MerchantName;
+        transaction.Date = updatedTransaction.Date;
+        transaction.CategoryId = updatedTransaction.CategoryId;
+        transaction.SubCategoryId = updatedTransaction.SubCategoryId;
+        transaction.TransactionType = updatedTransaction.TransactionType;
+        transaction.AccountId = updatedTransaction.AccountId;
+        transaction.CurrencyCode = updatedTransaction.CurrencyCode;
+        transaction.PlaidCategory = updatedTransaction.PlaidCategory;
+        transaction.Location = updatedTransaction.Location;
+        transaction.LogoUrl = updatedTransaction.LogoUrl;
+        transaction.MerchantEntityId = updatedTransaction.MerchantEntityId;
+        transaction.Website = updatedTransaction.Website;
+        transaction.CategoryIconUrl = updatedTransaction.CategoryIconUrl;
+
+        return transaction;
+    }
+
     public async Task<int> GetTransactionsCount(TransactionsCountRequest req)
     {
         IQueryable<Transaction> query = _context.Transactions;
@@ -209,43 +236,35 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         // var response = new Going.Plaid.Transactions.TransactionsGetResponse { Transactions = new List<Going.Plaid.Entity.Transaction> { } };
         var response = await _plaid.TransactionsGetAsync(request);
 
-        // Filter only new transactions
         var newTransactions = response.Transactions.ToList();
 
-        var lastTransIdx = newTransactions.FindIndex(x =>
-            x.Date?.ToDateTime(TimeOnly.MinValue) == lastTrans.Date &&
-            x.MerchantName == lastTrans.MerchantName &&
-            x.Name == lastTrans.Name &&
-            x.Location?.Address == lastTrans.Location?.Address &&
-            x.TransactionType == lastTrans.TransactionType);
+        var alreadyExist = await _context.Transactions
+            .Where(t => newTransactions
+                .Select(n => n.TransactionId).Contains(t.Id))
+            .ToListAsync();
 
-        // SOMETIMES TRANSACTIONS ARE UPDATED AND NOTHING ABOUT THEM STAYS THE SAME BUT SOMEHOW IT"S ID MAGICALLY BECOMES THE SAME WHEN SAVING
-        var lookups = 1;
-        while (lastTransIdx == -1 && lookups < newTransactions.Count)
-        {
-            var nextLastTrans = await _context.Transactions.OrderByDescending(x => x.Date).Skip(lookups).FirstOrDefaultAsync();
-            var index = newTransactions.FindIndex(x =>
-                x.Date?.ToDateTime(TimeOnly.MinValue) == nextLastTrans.Date &&
-                x.MerchantName == nextLastTrans.MerchantName &&
-                x.Name == nextLastTrans.Name &&
-                x.Location?.Address == nextLastTrans.Location?.Address &&
-                x.TransactionType == nextLastTrans.TransactionType);
-            if (index != -1)
-            {
-                lastTransIdx = index - lookups;
-            }
-            lookups++;
-        }
+        var alreadyExistIds = alreadyExist.Select(t => t.Id);
 
-        if (lastTransIdx >= 0)
-        {
-            newTransactions = newTransactions[0..lastTransIdx];
-        }
-
-        // Map and update category for new transactions - add to database
         var mapped = MapTransactions(newTransactions, item.UserId);
+
+        // Update transactions that already exist and remove them from 'mapped'
+        List<Transaction> mappedCopy = [.. mapped];
+        foreach (var transaction in mappedCopy)
+        {
+            if (alreadyExistIds.Contains(transaction.Id))
+            {
+                if (JsonSerializer.Serialize(transaction) != JsonSerializer.Serialize(alreadyExist.FirstOrDefault(t => t.Id == transaction.Id)))
+                    await UpdateTransaction(transaction);
+                mapped.RemoveAll(t => t.Id == transaction.Id);
+            }
+        }
+
         await _applier.ApplyCategoryRules(mapped);
         mapped.Reverse();
+        // Write 'data' to newTransactions.json
+        // var json = System.Text.Json.JsonSerializer.Serialize(mapped);
+        // var filePath = Path.Combine(Directory.GetCurrentDirectory(), "newTransactions.json");
+        // await System.IO.File.WriteAllTextAsync(filePath, json);
         _context.Transactions.AddRange(mapped);
         await _context.SaveChangesAsync();
     }
