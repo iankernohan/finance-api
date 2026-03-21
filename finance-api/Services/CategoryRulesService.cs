@@ -11,9 +11,10 @@ public class CategoryRulesService(AppDbContext context, ICategoryRulesApplier ap
     private readonly AppDbContext _context = context;
     private readonly ICategoryRulesApplier _applier = applier;
 
-    public async Task<List<CategoryRules>> GetCategoryRules()
+    public async Task<List<CategoryRules>> GetCategoryRules(string userId)
     {
         var rules = await _context.CategoryRules
+        .Where(c => c.UserId == userId)
         .OrderBy(x => x.Name)
         .Include(x => x.Category)
         .Include(x => x.SubCategory)
@@ -21,15 +22,15 @@ public class CategoryRulesService(AppDbContext context, ICategoryRulesApplier ap
         return rules;
     }
 
-    public async Task AddCategoryRule(string ruleName, int categoryId, int? subCategoryId, decimal? amount)
+    public async Task AddCategoryRule(string ruleName, int categoryId, int? subCategoryId, decimal? amount, string userId)
     {
-        _context.CategoryRules.Add(new CategoryRules { Name = ruleName, Amount = amount, CategoryId = categoryId, SubCategoryId = subCategoryId });
+        _context.CategoryRules.Add(new CategoryRules { Name = ruleName, Amount = amount, CategoryId = categoryId, SubCategoryId = subCategoryId, UserId = userId });
         await _context.SaveChangesAsync();
-        await _applier.ApplyCategoryRules();
+        await _applier.ApplyCategoryRules(userId);
         return;
     }
 
-    public async Task<CategoryRules> UpdateCategoryRule(UpdateCategoryRuleRequest request)
+    public async Task<CategoryRules> UpdateCategoryRule(UpdateCategoryRuleRequest request, string userId)
     {
         if (string.IsNullOrEmpty(request.Name))
         {
@@ -58,7 +59,7 @@ public class CategoryRulesService(AppDbContext context, ICategoryRulesApplier ap
         }
 
         await _context.SaveChangesAsync();
-        await _applier.ApplyCategoryRules();
+        await _applier.ApplyCategoryRules(userId);
 
         return rule;
     }

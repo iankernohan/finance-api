@@ -12,4 +12,6 @@ public class GetTransactionsRequest
     public int Page { get; set; } = 1;
 
     public Filters? Filters { get; set; }
+
+    public Boolean ShouldFetch { get; set; }
 }

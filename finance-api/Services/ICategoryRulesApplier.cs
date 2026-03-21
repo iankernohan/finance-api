@@ -4,7 +4,7 @@ namespace finance_api.Services;
 
 public interface ICategoryRulesApplier
 {
-    Task ApplyCategoryRules();
+    Task ApplyCategoryRules(string userId);
 
-    Task ApplyCategoryRules(List<Transaction> transactions);
+    Task ApplyCategoryRules(List<Transaction> transactions, string userId);
 }

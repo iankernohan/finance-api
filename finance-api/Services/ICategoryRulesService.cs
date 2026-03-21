@@ -6,8 +6,8 @@ namespace finance_api.Services;
 
 public interface ICategoryRulesService
 {
-    Task<List<CategoryRules>> GetCategoryRules();
-    Task AddCategoryRule(string ruleName, int categoryId, int? subCategoryId, decimal? amount);
-    Task<CategoryRules> UpdateCategoryRule(UpdateCategoryRuleRequest request);
+    Task<List<CategoryRules>> GetCategoryRules(string userId);
+    Task AddCategoryRule(string ruleName, int categoryId, int? subCategoryId, decimal? amount, string userId);
+    Task<CategoryRules> UpdateCategoryRule(UpdateCategoryRuleRequest request, string userId);
     Task<CategoryRules> DeleteCategoryRule(int ruleId);
 }

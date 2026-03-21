@@ -26,7 +26,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         }
         else
         {
-            if (DateTime.Now.ToString("MM:dd:yyyy") != lastTrans.Date?.ToString("MM:dd:yyyy"))
+            if (DateTime.Now.ToString("MM:dd:yyyy") != lastTrans.Date?.ToString("MM:dd:yyyy") && req.ShouldFetch)
                 await SyncTransactions(item, lastTrans);
         }
 
@@ -53,21 +53,50 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             throw new Exception($"No transaction found with id {updatedTransaction.Id}");
         }
 
-        transaction.Amount = updatedTransaction.Amount;
-        transaction.Name = updatedTransaction.Name;
-        transaction.MerchantName = updatedTransaction.MerchantName;
-        transaction.Date = updatedTransaction.Date;
-        transaction.CategoryId = updatedTransaction.CategoryId;
-        transaction.SubCategoryId = updatedTransaction.SubCategoryId;
-        transaction.TransactionType = updatedTransaction.TransactionType;
-        transaction.AccountId = updatedTransaction.AccountId;
-        transaction.CurrencyCode = updatedTransaction.CurrencyCode;
-        transaction.PlaidCategory = updatedTransaction.PlaidCategory;
-        transaction.Location = updatedTransaction.Location;
-        transaction.LogoUrl = updatedTransaction.LogoUrl;
-        transaction.MerchantEntityId = updatedTransaction.MerchantEntityId;
-        transaction.Website = updatedTransaction.Website;
-        transaction.CategoryIconUrl = updatedTransaction.CategoryIconUrl;
+        if (!string.IsNullOrEmpty(updatedTransaction.Name))
+            transaction.Name = updatedTransaction.Name;
+
+        if (!string.IsNullOrEmpty(updatedTransaction.MerchantName))
+            transaction.MerchantName = updatedTransaction.MerchantName;
+
+        if (updatedTransaction.Date.HasValue)
+            transaction.Date = updatedTransaction.Date;
+
+        if (updatedTransaction.Amount != 0)
+            transaction.Amount = updatedTransaction.Amount;
+
+        if (updatedTransaction.TransactionType is not null)
+            transaction.TransactionType = updatedTransaction.TransactionType;
+
+        if (!string.IsNullOrEmpty(updatedTransaction.AccountId))
+            transaction.AccountId = updatedTransaction.AccountId;
+
+        if (!string.IsNullOrEmpty(updatedTransaction.CurrencyCode))
+            transaction.CurrencyCode = updatedTransaction.CurrencyCode;
+
+        if (updatedTransaction.PlaidCategory is not null)
+            transaction.PlaidCategory = updatedTransaction.PlaidCategory;
+
+        if (updatedTransaction.Location is not null)
+            transaction.Location = updatedTransaction.Location;
+
+        if (!string.IsNullOrEmpty(updatedTransaction.LogoUrl))
+            transaction.LogoUrl = updatedTransaction.LogoUrl;
+
+        if (!string.IsNullOrEmpty(updatedTransaction.MerchantEntityId))
+            transaction.MerchantEntityId = updatedTransaction.MerchantEntityId;
+
+        if (!string.IsNullOrEmpty(updatedTransaction.Website))
+            transaction.Website = updatedTransaction.Website;
+
+        if (!string.IsNullOrEmpty(updatedTransaction.CategoryIconUrl))
+            transaction.CategoryIconUrl = updatedTransaction.CategoryIconUrl;
+
+        if (updatedTransaction.CategoryId.HasValue)
+            transaction.CategoryId = updatedTransaction.CategoryId;
+
+        if (updatedTransaction.SubCategoryId.HasValue)
+            transaction.SubCategoryId = updatedTransaction.SubCategoryId;
 
         return transaction;
     }
@@ -212,7 +241,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             t.UserId = userId;
         }
 
-        await _applier.ApplyCategoryRules(data);
+        await _applier.ApplyCategoryRules(data, userId);
         data.Reverse();
         _context.Transactions.AddRange(data);
         await _context.SaveChangesAsync();
@@ -259,7 +288,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             }
         }
 
-        await _applier.ApplyCategoryRules(mapped);
+        await _applier.ApplyCategoryRules(mapped, item.UserId);
         mapped.Reverse();
         // Write 'data' to newTransactions.json
         // var json = System.Text.Json.JsonSerializer.Serialize(mapped);
