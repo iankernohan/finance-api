@@ -23,12 +23,13 @@ namespace finance_api.Controllers
         [Authorize]
         public async Task<IActionResult> GetTransactions(GetTransactionsRequest req)
         {
-            var item = await _plaidService.GetPlaidItem(req.UserId);
+            var userId = User.GetUserId();
+            var item = await _plaidService.GetPlaidItem(userId);
 
             if (item == null)
                 return NotFound("No Plaid item found");
 
-            var data = await _service.GetTransactions(item, req);
+            var data = await _service.GetTransactions(item, req, userId);
 
             return Ok(data);
         }
@@ -37,24 +38,27 @@ namespace finance_api.Controllers
         [Authorize]
         public async Task<IActionResult> GetTransactionsCount(TransactionsCountRequest req)
         {
-            var data = await _service.GetTransactionsCount(req);
+            var userId = User.GetUserId();
+            var data = await _service.GetTransactionsCount(req, userId);
 
             return Ok(data);
         }
 
         [HttpPost("UncategorizedTransactions")]
         [Authorize]
-        public async Task<IActionResult> GetUncategorizedTransactions(GetTransactionsRequest req)
+        public async Task<IActionResult> GetUncategorizedTransactions()
         {
-            var transactions = await _service.GetUncategorizedTransactions(req.UserId);
+            var userId = User.GetUserId();
+            var transactions = await _service.GetUncategorizedTransactions(userId);
             return Ok(transactions);
         }
 
         [HttpPost("CategorizedTransactions")]
         [Authorize]
-        public async Task<IActionResult> GetCategorizedTransactions(GetTransactionsRequest req)
+        public async Task<IActionResult> GetCategorizedTransactions()
         {
-            var transactions = await _service.GetCategorizedTransactions(req.UserId);
+            var userId = User.GetUserId();
+            var transactions = await _service.GetCategorizedTransactions(userId);
             return Ok(transactions);
         }
 
@@ -62,7 +66,8 @@ namespace finance_api.Controllers
         [Authorize]
         public async Task<IActionResult> GetTransactionsByCategory(TransactionsByCategoryRequest req)
         {
-            var transactions = await _service.GetTransactionsByCategory(req.CategoryNames);
+            var userId = User.GetUserId();
+            var transactions = await _service.GetTransactionsByCategory(req.CategoryNames, userId);
 
             return Ok(transactions);
         }
@@ -80,7 +85,8 @@ namespace finance_api.Controllers
         [Authorize]
         public async Task<IActionResult> GetMonthlySummary(MonthlySummaryRequest req)
         {
-            var summary = await _service.GetMonthlySummary(req);
+            var userId = User.GetUserId();
+            var summary = await _service.GetMonthlySummary(req, userId);
             return Ok(summary);
         }
     }

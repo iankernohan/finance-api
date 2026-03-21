@@ -15,14 +15,14 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
     private readonly ICategoryRulesApplier _applier = applier;
     private readonly EncryptionService _encryptionService = encryptionService;
 
-    public async Task<List<Transaction>> GetTransactions(PlaidItem item, GetTransactionsRequest req)
+    public async Task<List<Transaction>> GetTransactions(PlaidItem item, GetTransactionsRequest req, string userId)
     {
-        var lastTrans = await _context.Transactions.OrderByDescending(x => x.Date).FirstOrDefaultAsync();
+        var lastTrans = await _context.Transactions.Where(t => t.UserId == userId).OrderByDescending(x => x.Date).FirstOrDefaultAsync();
 
-        IQueryable<Transaction> query = _context.Transactions.Include(x => x.Category).Include(x => x.SubCategory);
+        IQueryable<Transaction> query = _context.Transactions.Where(t => t.UserId == userId).Include(x => x.Category).Include(x => x.SubCategory);
         if (lastTrans is null)
         {
-            await SeedDb(req.UserId);
+            await SeedDb(userId);
         }
         else
         {
@@ -37,6 +37,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         }
 
         return await _context.Transactions
+            .Where(t => t.UserId == userId)
             .Include(x => x.Category)
             .Include(x => x.SubCategory)
             .OrderByDescending(x => x.Date)
@@ -101,9 +102,9 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         return transaction;
     }
 
-    public async Task<int> GetTransactionsCount(TransactionsCountRequest req)
+    public async Task<int> GetTransactionsCount(TransactionsCountRequest req, string userId)
     {
-        IQueryable<Transaction> query = _context.Transactions;
+        IQueryable<Transaction> query = _context.Transactions.Where(t => t.UserId == userId);
         if (req.Filters is not null)
         {
             query = ApplyFilters(query, req.Filters);
@@ -114,6 +115,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
     public async Task<List<Transaction>> GetUncategorizedTransactions(string userId)
     {
         var transactions = await _context.Transactions
+            .Where(t => t.UserId == userId)
             .Where(x => x.CategoryId == null)
             .OrderByDescending(x => x.Date)
             .ToListAsync();
@@ -124,6 +126,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
     public async Task<List<Transaction>> GetCategorizedTransactions(string userId)
     {
         var transactions = await _context.Transactions
+            .Where(t => t.UserId == userId)
             .Where(x => x.CategoryId != null)
             .OrderByDescending(x => x.Date)
             .ToListAsync();
@@ -131,13 +134,13 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         return transactions;
     }
 
-    public async Task<Dictionary<string, List<Transaction>>> GetTransactionsByCategory(List<string>? categoryNames)
+    public async Task<Dictionary<string, List<Transaction>>> GetTransactionsByCategory(List<string>? categoryNames, string userId)
     {
         List<string> categories;
 
         if (categoryNames is null || categoryNames.Count == 0)
         {
-            categories = await _context.Category.Select(c => c.Name).ToListAsync();
+            categories = await _context.Category.Where(c => c.UserId == userId).Select(c => c.Name).ToListAsync();
         }
         else
         {
@@ -149,6 +152,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         foreach (var category in categories)
         {
             var transactions = await _context.Transactions
+                .Where(t => t.UserId == userId)
                 .Where(t => t.Category != null && t.Category.Name == category)
                 .ToListAsync();
 
@@ -186,24 +190,27 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         return updated;
     }
 
-    public async Task<MonthlySummary> GetMonthlySummary(MonthlySummaryRequest req)
+    public async Task<MonthlySummary> GetMonthlySummary(MonthlySummaryRequest req, string userId)
     {
         var monthName = GetMonthName(req.Month);
         var income = await _context.Transactions
+            .Where(t => t.UserId == userId)
             .Where(t => t.Date.HasValue && t.Date.Value.Month == req.Month && t.Date.Value.Year == req.Year)
             .Where(t => t.Amount < 0).
             SumAsync(t => t.Amount);
         var expenses = await _context.Transactions
+            .Where(t => t.UserId == userId)
             .Where(t => t.Date.HasValue && t.Date.Value.Month == req.Month && t.Date.Value.Year == req.Year)
             .Where(t => t.Amount > 0)
             .SumAsync(t => t.Amount);
 
-        var categories = await _context.Category.OrderBy(c => c.Name).Select(c => c.Name).ToListAsync();
+        var categories = await _context.Category.Where(t => t.UserId == userId).OrderBy(c => c.Name).Select(c => c.Name).ToListAsync();
         Dictionary<string, List<Transaction>> transactionsByCategory = new();
 
         foreach (var category in categories)
         {
             var transactions = await _context.Transactions
+                .Where(t => t.UserId == userId)
                 .Where(t => t.Date.HasValue && t.Date.Value.Month == req.Month && t.Date.Value.Year == req.Year)
                 .Where(t => t.Category != null && t.Category.Name == category)
                 .Include(t => t.SubCategory)
@@ -215,6 +222,7 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             }
         }
         transactionsByCategory["Uncategorized"] = await _context.Transactions
+            .Where(t => t.UserId == userId)
             .Where(t => t.Date.HasValue && t.Date.Value.Month == req.Month && t.Date.Value.Year == req.Year)
             .Where(t => t.Category == null).ToListAsync();
 
