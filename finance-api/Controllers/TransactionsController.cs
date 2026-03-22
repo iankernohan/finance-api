@@ -72,6 +72,14 @@ namespace finance_api.Controllers
             return Ok(transactions);
         }
 
+        [HttpPost("UpdateTransaction")]
+        [Authorize]
+        public async Task<IActionResult> UpdateTransaction(UpdateTransactionRequest req)
+        {
+            var updated = await _service.UpdateTransactionAndSave(req);
+            return Ok(updated);
+        }
+
         [HttpPost("UpdateCategory")]
         [Authorize]
         public async Task<IActionResult> UpdateCategory(UpdateTransactionCategoryRequest req)

@@ -13,5 +13,7 @@ public class MappingProfile : Profile
         CreateMap<Category, CategoryDtoRequest>().ReverseMap();
         CreateMap<SubCategory, SubCategoryDtoResponse>().ReverseMap();
         CreateMap<SubCategory, SubCategoryDtoRequest>().ReverseMap();
+        CreateMap<Transaction, UpdateTransactionRequest>();
     }
 }
+

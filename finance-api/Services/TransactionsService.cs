@@ -1,3 +1,4 @@
+using AutoMapper;
 using finance_api.Data;
 using finance_api.Dtos;
 using finance_api.Models;
@@ -8,12 +9,13 @@ using System.Text.Json;
 
 namespace finance_api.Services;
 
-public class TransactionsService(AppDbContext context, PlaidClient plaid, ICategoryRulesApplier applier, EncryptionService encryptionService) : ITransactionsService
+public class TransactionsService(AppDbContext context, PlaidClient plaid, ICategoryRulesApplier applier, EncryptionService encryptionService, IMapper mapper) : ITransactionsService
 {
     private readonly AppDbContext _context = context;
     private readonly PlaidClient _plaid = plaid;
     private readonly ICategoryRulesApplier _applier = applier;
     private readonly EncryptionService _encryptionService = encryptionService;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<List<Transaction>> GetTransactions(PlaidItem item, GetTransactionsRequest req, string userId)
     {
@@ -46,13 +48,9 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             .ToListAsync();
     }
 
-    public async Task<Transaction> UpdateTransaction(Transaction updatedTransaction)
+    public async Task<Transaction> UpdateTransaction(UpdateTransactionRequest updatedTransaction)
     {
-        var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == updatedTransaction.Id);
-        if (transaction == null)
-        {
-            throw new Exception($"No transaction found with id {updatedTransaction.Id}");
-        }
+        var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == updatedTransaction.Id) ?? throw new Exception($"No transaction found with id {updatedTransaction.Id}");
 
         if (!string.IsNullOrEmpty(updatedTransaction.Name))
             transaction.Name = updatedTransaction.Name;
@@ -63,8 +61,8 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         if (updatedTransaction.Date.HasValue)
             transaction.Date = updatedTransaction.Date;
 
-        if (updatedTransaction.Amount != 0)
-            transaction.Amount = updatedTransaction.Amount;
+        if (updatedTransaction.Amount != null && updatedTransaction.Amount > 0)
+            transaction.Amount = (decimal)updatedTransaction.Amount;
 
         if (updatedTransaction.TransactionType is not null)
             transaction.TransactionType = updatedTransaction.TransactionType;
@@ -99,6 +97,13 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
         if (updatedTransaction.SubCategoryId.HasValue)
             transaction.SubCategoryId = updatedTransaction.SubCategoryId;
 
+        return transaction;
+    }
+
+    public async Task<Transaction> UpdateTransactionAndSave(UpdateTransactionRequest updatedTransaction)
+    {
+        var transaction = await UpdateTransaction(updatedTransaction);
+        await _context.SaveChangesAsync();
         return transaction;
     }
 
@@ -291,7 +296,10 @@ public class TransactionsService(AppDbContext context, PlaidClient plaid, ICateg
             if (alreadyExistIds.Contains(transaction.Id))
             {
                 if (JsonSerializer.Serialize(transaction) != JsonSerializer.Serialize(alreadyExist.FirstOrDefault(t => t.Id == transaction.Id)))
-                    await UpdateTransaction(transaction);
+                {
+                    var req = _mapper.Map<UpdateTransactionRequest>(transaction);
+                    await UpdateTransaction(req);
+                }
                 mapped.RemoveAll(t => t.Id == transaction.Id);
             }
         }

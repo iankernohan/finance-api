@@ -7,6 +7,7 @@ namespace finance_api.Services;
 public interface ITransactionsService
 {
     Task<List<Transaction>> GetTransactions(PlaidItem item, GetTransactionsRequest req, string userId);
+    Task<Transaction> UpdateTransactionAndSave(UpdateTransactionRequest updatedTransaction);
     Task<int> GetTransactionsCount(TransactionsCountRequest req, string userId);
     Task<List<Transaction>> GetUncategorizedTransactions(string userId);
     Task<List<Transaction>> GetCategorizedTransactions(string userId);
